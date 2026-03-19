@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Transactions{% endblock %}
+
+{% block content %}
+<div class="transactions-page">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 data-en="Transactions" data-sw="Miamala">Transactions</h1>
+        <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            <span data-en="Add" data-sw="Ongeza">Add</span>
+        </a>
+    </div>
+    
+    <!-- Search and Filters -->
+    <div class="filters-card" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+        <div class="search-box" style="margin-bottom: 15px;">
+            <input type="text" 
+                   id="searchInput" 
+                   class="form-control" 
+                   placeholder="Search transactions..."
+                   data-en-placeholder="Search transactions..."
+                   data-sw-placeholder="Tafuta miamala...">
+        </div>
+        
+        <div class="filter-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+            <select id="filterType" class="form-control">
+                <option value="all" data-en="All Types" data-sw="Aina Zote">All Types</option>
+                <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
+                <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
+            </select>
+            
+            <select id="filterPayment" class="form-control">
+                <option value="all" data-en="All Payments" data-sw="Malipo Yote">All Payments</option>
+                <option value="cash" data-en="Cash" data-sw="Taslimu">Cash</option>
+                <option value="mpesa" data-en="M-Pesa" data-sw="M-Pesa">M-Pesa</option>
+                <option value="other" data-en="Other" data-sw="Nyingine">Other</option>
+            </select>
+            
+            <input type="date" id="filterFrom" class="form-control" placeholder="From">
+            <input type="date" id="filterTo" class="form-control" placeholder="To">
+            
+            <button class="btn btn-primary" onclick="applyFilters()">
+                <i class="fas fa-filter"></i>
+                <span data-en="Filter" data-sw="Chuja">Filter</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Transactions List -->
+    <div class="transactions-list" id="transactionsList">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p data-en="Loading transactions..." data-sw="Inapakia miamala...">Loading transactions...</p>
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    <div id="pagination" class="pagination-container"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = 1;
+let totalPages = 1;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTransactions();
+    
+    // Setup search with debounce
+    const searchInput = document.getElementById('searchInput');
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            loadTransactions();
+        }, 500);
+    });
+});
+
+function loadTransactions() {
+    const params = new URLSearchParams({
+        page: currentPage,
+        type: document.getElementById('filterType').value,
+        payment_method: document.getElementById('filterPayment').value,
+        search: document.getElementById('searchInput').value,
+        from_date: document.getElementById('filterFrom').value,
+        to_date: document.getElementById('filterTo').value
+    });
+    
+    fetch(`/transactions/api/list?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayTransactions(data.transactions);
+                totalPages = data.pages;
+                setupPagination();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('transactionsList').innerHTML = '<p class="error">Error loading transactions</p>';
+        });
+}
+
+function displayTransactions(transactions) {
+    const container = document.getElementById('transactionsList');
+    const currentLang = document.documentElement.lang || 'en';
+    
+    if (transactions.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 40px;">
+                <i class="fas fa-receipt" style="font-size: 48px; color: var(--gray-color);"></i>
+                <h3 data-en="No Transactions Found" data-sw="Hakuna Miamala Iliyopatikana">No Transactions Found</h3>
+                <p data-en="Add your first transaction to get started" 
+                   data-sw="Ongeza muamala wako wa kwanza kuanza">
+                    Add your first transaction to get started
+                </p>
+                <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    <span data-en="Add Transaction" data-sw="Ongeza Muamala">Add Transaction</span>
+                </a>
+            </div>
+        `;
+        updateUIText(currentLang);
+        return;
+    }
+    
+    let html = '<ul class="transaction-list">';
+    
+    transactions.forEach(t => {
+        const icon = t.type === 'income' ? '↑' : '↓';
+        const colorClass = t.type === 'income' ? 'income' : 'expense';
+        
+        html += `
+            <li class="transaction-item" onclick="showTransactionDetails('${t.id}')">
+                <div class="transaction-icon ${colorClass}">
+                    <i class="fas fa-${t.type === 'income' ? 'arrow-up' : 'arrow-down'}"></i>
+                </div>
+                <div class="transaction-details">
+                    <div class="transaction-title">${t.description || t.category}</div>
+                    <div class="transaction-meta">
+                        <span>${t.category}</span> • <span>${t.payment_method}</span> • <span>${t.date}</span>
+                    </div>
+                </div>
+                <div class="transaction-amount ${colorClass}">
+                    ${icon} KES ${t.amount.toLocaleString()}
+                </div>
+            </li>
+        `;
+    });
+    
+    html += '</ul>';
+    container.innerHTML = html;
+    updateUIText(currentLang);
+}
+
+function applyFilters() {
+    currentPage = 1;
+    loadTransactions();
+}
+
+function setupPagination() {
+    const container = document.getElementById('pagination');
+    let html = '<div class="pagination" style="display: flex; justify-content: center; gap: 5px; margin-top: 20px;">';
+    
+    // Previous button
+    html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+        <i class="fas fa-chevron-left"></i>
+    </button>`;
+    
+    // Page numbers
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+        } else if (i === currentPage - 3 || i === currentPage + 3) {
+            html += `<span class="page-dots">...</span>`;
+        }
+    }
+    
+    // Next button
+    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+        <i class="fas fa-chevron-right"></i>
+    </button>`;
+    
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function changePage(page) {
+    if (page >= 1 && page <= totalPages) {
+        currentPage = page;
+        loadTransactions();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+}
+</script>
+{% endblock %}

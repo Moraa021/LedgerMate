@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="profile-header shadow-sm" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 40px 20px; border-radius: 15px; margin-bottom: 25px; text-align: center;">
+        <div class="profile-avatar mb-3" style="position: relative; display: inline-block;">
+            <div style="width: 100px; height: 100px; background: white; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.3);">
+                <span style="font-size: 40px; color: #667eea; font-weight: bold; text-transform: uppercase;">
+                    {% if current_user.business_name %}
+                        {{ current_user.business_name[0] }}
+                    {% else %}
+                        {{ current_user.username[0] if current_user.username else 'U' }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <h2 class="mb-1">{{ current_user.business_name or current_user.username }}</h2>
+        <p class="mb-0 opacity-75">{{ current_user.email or 'No email provided' }}</p>
+        <div class="mt-3 small">
+            <i class="fas fa-calendar-alt"></i> Member since: {{ stats.member_since }}
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <i class="fas fa-exchange-alt text-primary mb-2" style="font-size: 1.5rem;"></i>
+                <div class="small text-muted">Transactions</div>
+                <div class="h4 mb-0 font-weight-bold">{{ stats.total_transactions }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <i class="fas fa-tags text-success mb-2" style="font-size: 1.5rem;"></i>
+                <div class="small text-muted">Categories</div>
+                <div class="h4 mb-0 font-weight-bold">{{ stats.category_count }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card h-100 border-0 shadow-sm text-center p-3">
+                <i class="fas fa-wallet text-info mb-2" style="font-size: 1.5rem;"></i>
+                <div class="small text-muted">Net Balance</div>
+                <div class="h4 mb-0 font-weight-bold {% if stats.net_total >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ "{:,.0f}".format(stats.net_total) }} KES
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="nav nav-tabs nav-fill bg-light" id="profileTabs">
+            <button class="nav-link active py-3 border-0" onclick="showTab(event, 'profile')">
+                <i class="fas fa-user-edit mr-2"></i> Details
+            </button>
+            <button class="nav-link py-3 border-0" onclick="showTab(event, 'security')">
+                <i class="fas fa-shield-alt mr-2"></i> Security
+            </button>
+            <button class="nav-link py-3 border-0" onclick="showTab(event, 'stats')">
+                <i class="fas fa-chart-bar mr-2"></i> Stats
+            </button>
+        </div>
+
+        <div class="card-body p-4">
+            <div id="tab-profile" class="tab-pane-custom active">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Business Name</label>
+                        <input type="text" name="business_name" class="form-control" value="{{ current_user.business_name or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" value="{{ current_user.email or '' }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                </form>
+            </div>
+
+            <div id="tab-security" class="tab-pane-custom d-none">
+                <form method="POST">
+                    <input type="hidden" name="action" value="change_password">
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" id="new_password" name="new_password" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm New Password</label>
+                        <input type="password" id="confirm_password" class="form-control">
+                        <div id="passwordMatch" class="text-danger small d-none mt-1">Passwords do not match</div>
+                    </div>
+                    <button type="submit" class="btn btn-dark">Update Password</button>
+                </form>
+            </div>
+
+            <div id="tab-stats" class="tab-pane-custom d-none">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Total Income</span>
+                        <span class="text-success font-weight-bold">{{ "{:,.0f}".format(stats.income_total) }} KES</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>Total Expenses</span>
+                        <span class="text-danger font-weight-bold">{{ "{:,.0f}".format(stats.expense_total) }} KES</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5 p-4 border rounded" style="background-color: #fff5f5; border-color: #feb2b2 !important;">
+        <h5 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+        <p class="small text-muted">Once you delete your account, there is no going back. Please be certain.</p>
+        <button class="btn btn-outline-danger btn-sm" onclick="confirmDelete()">Delete Account</button>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link.active {
+        background-color: white !important;
+        color: #667eea !important;
+        font-weight: bold;
+        border-bottom: 3px solid #667eea !important;
+    }
+    .nav-tabs .nav-link { color: #666; transition: 0.3s; }
+    .form-control:focus { border-color: #667eea; box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(event, tabName) {
+    // Hide all contents
+    document.querySelectorAll('.tab-pane-custom').forEach(el => el.classList.add('d-none'));
+    // Remove active from all buttons
+    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+    
+    // Show selected
+    document.getElementById('tab-' + tabName).classList.remove('d-none');
+    event.currentTarget.classList.add('active');
+}
+
+function confirmDelete() {
+    if(confirm("Are you absolutely sure? This will delete all your transaction history forever.")) {
+        // Here you would typically submit a form or hit an API
+        alert("Account deletion request received.");
+    }
+}
+
+// Simple password match check
+document.getElementById('confirm_password')?.addEventListener('input', function() {
+    const p1 = document.getElementById('new_password').value;
+    const p2 = this.value;
+    const warning = document.getElementById('passwordMatch');
+    if (p1 !== p2) {
+        warning.classList.remove('d-none');
+    } else {
+        warning.classList.add('d-none');
+    }
+});
+</script>
+{% endblock %}

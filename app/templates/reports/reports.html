@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="reports">
+    <h1 data-en="Financial Reports" data-sw="Ripoti za Kifedha">Financial Reports</h1>
+    
+    <!-- Report Filters -->
+    <div class="card">
+        <h3 data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</h3>
+        
+        <div class="filter-section">
+            <!-- Report Type -->
+            <div class="form-group">
+                <label data-en="Report Period" data-sw="Kipindi cha Ripoti">Report Period</label>
+                <div class="period-selector">
+                    <button type="button" class="period-btn active" onclick="setPeriod('daily')" 
+                            data-en="Daily" data-sw="Kila Siku">Daily</button>
+                    <button type="button" class="period-btn" onclick="setPeriod('weekly')"
+                            data-en="Weekly" data-sw="Kila Wiki">Weekly</button>
+                    <button type="button" class="period-btn" onclick="setPeriod('monthly')"
+                            data-en="Monthly" data-sw="Kila Mwezi">Monthly</button>
+                    <button type="button" class="period-btn" onclick="setPeriod('custom')"
+                            data-en="Custom" data-sw="Maalum">Custom</button>
+                </div>
+            </div>
+            
+            <!-- Date Range (for custom period) -->
+            <div id="customDateRange" style="display: none;">
+                <div class="form-group">
+                    <label for="from_date" data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
+                    <input type="date" class="form-control" id="from_date" name="from_date">
+                </div>
+                <div class="form-group">
+                    <label for="to_date" data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
+                    <input type="date" class="form-control" id="to_date" name="to_date">
+                </div>
+            </div>
+            
+            <!-- Additional Filters -->
+            <div class="form-group">
+                <label data-en="Transaction Type" data-sw="Aina ya Muamala">Transaction Type</label>
+                <select class="form-control" id="reportType">
+                    <option value="all" data-en="All Transactions" data-sw="Miamala Yote">All Transactions</option>
+                    <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
+                    <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label data-en="Category" data-sw="Aina">Category</label>
+                <select class="form-control" id="reportCategory">
+                    <option value="all" data-en="All Categories" data-sw="Aina Zote">All Categories</option>
+                    <!-- Categories will be loaded dynamically -->
+                </select>
+            </div>
+            
+            <!-- Export Options -->
+            <div class="export-options">
+                <h4 data-en="Export Format" data-sw="Muundo wa Kuhamisha">Export Format</h4>
+                <div class="export-buttons">
+                    <button class="btn" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </button>
+                    <button class="btn" onclick="exportReport('csv')">
+                        <i class="fas fa-file-csv"></i> CSV
+                    </button>
+                    <button class="btn" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    
+                </div>
+            </div>
+            
+            <!-- Generate Button -->
+            <button class="btn btn-primary btn-block" onclick="generateReport()">
+                <i class="fas fa-chart-line"></i>
+                <span data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Report Results -->
+    <div class="card" id="reportResults" style="display: none;">
+        <div class="report-header">
+            <h3 data-en="Report Results" data-sw="Matokeo ya Ripoti">Report Results</h3>
+            <div class="summary-stats">
+                <p><strong data-en="Total Income:" data-sw="Jumla ya Mapato:">Total Income:</strong> 
+                    <span id="reportIncome">KES 0</span></p>
+                <p><strong data-en="Total Expense:" data-sw="Jumla ya Matumizi:">Total Expense:</strong> 
+                    <span id="reportExpense">KES 0</span></p>
+                <p><strong data-en="Net:" data-sw="Usawa:">Net:</strong> 
+                    <span id="reportNet">KES 0</span></p>
+            </div>
+        </div>
+        
+        <!-- Report Chart -->
+        <div class="chart-container">
+            <canvas id="reportChart"></canvas>
+        </div>
+        
+        <!-- Report Table -->
+        <div class="table-responsive">
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th data-en="Date" data-sw="Tarehe">Date</th>
+                        <th data-en="Type" data-sw="Aina">Type</th>
+                        <th data-en="Category" data-sw="Aina">Category</th>
+                        <th data-en="Description" data-sw="Maelezo">Description</th>
+                        <th data-en="Payment" data-sw="Malipo">Payment</th>
+                        <th data-en="Amount" data-sw="Kiasi">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="reportTableBody">
+                    <!-- Transactions will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPeriod = 'daily';
+let reportChart = null;
+
+// Load categories on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategories();
+});
+
+function loadCategories() {
+    fetch('/categories/api/list')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const select = document.getElementById('reportCategory');
+                data.categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    select.appendChild(option);
+                });
+            }
+        });
+}
+
+function setPeriod(period) {
+    currentPeriod = period;
+    
+    // Update button styles
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Show/hide custom date range
+    const customRange = document.getElementById('customDateRange');
+    if (period === 'custom') {
+        customRange.style.display = 'block';
+    } else {
+        customRange.style.display = 'none';
+    }
+}
+
+function generateReport() {
+    // Show loading
+    showLoading();
+    
+    // Build query parameters
+    const params = new URLSearchParams({
+        period: currentPeriod,
+        type: document.getElementById('reportType').value,
+        category: document.getElementById('reportCategory').value
+    });
+    
+    if (currentPeriod === 'custom') {
+        params.append('from_date', document.getElementById('from_date').value);
+        params.append('to_date', document.getElementById('to_date').value);
+    }
+    
+    // Fetch report data
+    fetch(`/reports/api/generate?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayReport(data);
+            } else {
+                showFlashMessage('Error generating report', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showFlashMessage('Error generating report', 'error');
+        })
+        .finally(() => {
+            hideLoading();
+        });
+}
+
+function displayReport(data) {
+    // Show results section
+    document.getElementById('reportResults').style.display = 'block';
+    
+    // Update summary stats
+    document.getElementById('reportIncome').textContent = 
+        `KES ${data.summary.income.toLocaleString()}`;
+    document.getElementById('reportExpense').textContent = 
+        `KES ${data.summary.expense.toLocaleString()}`;
+    document.getElementById('reportNet').textContent = 
+        `KES ${data.summary.net.toLocaleString()}`;
+    
+    // Update chart
+    createReportChart(data.chart_data);
+    
+    // Update table
+    displayReportTable(data.transactions);
+}
+
+function createReportChart(chartData) {
+    const ctx = document.getElementById('reportChart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (reportChart) {
+        reportChart.destroy();
+    }
+    
+    reportChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [
+                {
+                    label: 'Income',
+                    data: chartData.income,
+                    backgroundColor: '#2ecc71',
+                    borderColor: '#27ae60',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Expense',
+                    data: chartData.expense,
+                    backgroundColor: '#e74c3c',
+                    borderColor: '#c0392b',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'KES ' + value.toLocaleString();
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            label += 'KES ' + context.raw.toLocaleString();
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displayReportTable(transactions) {
+    const tbody = document.getElementById('reportTableBody');
+    const currentLang = document.documentElement.lang || 'en';
+    
+    if (transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center">
+                    <p data-en="No transactions found" data-sw="Hakuna miamala iliyopatikana">
+                        No transactions found
+                    </p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    let html = '';
+    transactions.forEach(t => {
+        const typeClass = t.type === 'income' ? 'income-text' : 'expense-text';
+        const typeIcon = t.type === 'income' ? '↑' : '↓';
+        
+        html += `
+            <tr>
+                <td>${t.date}</td>
+                <td class="${typeClass}">${typeIcon} ${t.type}</td>
+                <td>${t.category}</td>
+                <td>${t.description || '-'}</td>
+                <td>${t.payment_method}</td>
+                <td class="${typeClass}">KES ${t.amount.toLocaleString()}</td>
+            </tr>
+        `;
+    });
+    
+    tbody.innerHTML = html;
+    updateUIText(currentLang);
+}
+
+function exportReport(format) {
+    // Build query parameters
+    const params = new URLSearchParams({
+        period: currentPeriod,
+        type: document.getElementById('reportType').value,
+        category: document.getElementById('reportCategory').value,
+        format: format
+    });
+    
+    if (currentPeriod === 'custom') {
+        params.append('from_date', document.getElementById('from_date').value);
+        params.append('to_date', document.getElementById('to_date').value);
+    }
+    
+    // Redirect to export endpoint
+    window.location.href = `/reports/api/export?${params.toString()}`;
+}
+
+function showLoading() {
+    // Show loading indicator
+    const btn = document.querySelector('.btn-primary');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    btn.disabled = true;
+}
+
+function hideLoading() {
+    const btn = document.querySelector('.btn-primary');
+    btn.innerHTML = '<i class="fas fa-chart-line"></i> Generate Report';
+    btn.disabled = false;
+}
+</script>
+{% endblock %}

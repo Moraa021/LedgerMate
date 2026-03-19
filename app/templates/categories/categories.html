@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="categories-page">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 data-en="Manage Categories" data-sw="Dhibiti Aina">Manage Categories</h1>
+        <button class="btn btn-primary" onclick="showAddCategoryModal()">
+            <i class="fas fa-plus"></i>
+            <span data-en="Add Category" data-sw="Ongeza Aina">Add Category</span>
+        </button>
+    </div>
+    
+    <!-- Category Stats -->
+    <div class="stats-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+        <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 10px;">
+            <h3 data-en="Total Categories" data-sw="Jumla ya Aina">Total Categories</h3>
+            <p class="stat-number" id="totalCategories">0</p>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #00b09b, #96c93d); color: white; padding: 20px; border-radius: 10px;">
+            <h3 data-en="Income Categories" data-sw="Aina za Mapato">Income Categories</h3>
+            <p class="stat-number" id="incomeCategories">0</p>
+        </div>
+        <div class="stat-card" style="background: linear-gradient(135deg, #f12711, #f5af19); color: white; padding: 20px; border-radius: 10px;">
+            <h3 data-en="Expense Categories" data-sw="Aina za Matumizi">Expense Categories</h3>
+            <p class="stat-number" id="expenseCategories">0</p>
+        </div>
+    </div>
+    
+    <!-- Categories Grid -->
+    <div class="categories-grid" id="categoriesGrid">
+        <!-- Categories will be loaded here -->
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p data-en="Loading categories..." data-sw="Inapakia aina...">Loading categories...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal" id="addCategoryModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-en="Add New Category" data-sw="Ongeza Aina Mpya">Add New Category</h3>
+            <button class="modal-close" onclick="closeModal('addCategoryModal')">&times;</button>
+        </div>
+        
+        <form id="addCategoryForm" onsubmit="addCategory(event)">
+            <div class="form-group">
+                <label for="catName" data-en="Category Name" data-sw="Jina la Aina">Category Name</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="catName" 
+                       name="name" 
+                       required
+                       data-en-placeholder="e.g., Office Supplies"
+                       data-sw-placeholder="Mfano, Vifaa vya Ofisi">
+            </div>
+            
+            <div class="form-group">
+                <label for="catNameSw" data-en="Name in Swahili (Optional)" data-sw="Jina kwa Kiswahili (Si lazima)">
+                    Name in Swahili (Optional)
+                </label>
+                <input type="text" 
+                       class="form-control" 
+                       id="catNameSw" 
+                       name="name_sw"
+                       data-en-placeholder="e.g., Vifaa vya Ofisi"
+                       data-sw-placeholder="Mfano, Vifaa vya Ofisi">
+            </div>
+            
+            <div class="form-group">
+                <label data-en="Category Type" data-sw="Aina ya Kategoria">Category Type</label>
+                <div class="type-selector" style="display: flex; gap: 10px;">
+                    <label class="type-option" style="flex: 1;">
+                        <input type="radio" name="type" value="income" checked>
+                        <div style="text-align: center; padding: 10px; background: #e8f5e9; border-radius: 5px;">
+                            <i class="fas fa-arrow-up" style="color: #2ecc71;"></i>
+                            <span data-en="Income" data-sw="Mapato">Income</span>
+                        </div>
+                    </label>
+                    <label class="type-option" style="flex: 1;">
+                        <input type="radio" name="type" value="expense">
+                        <div style="text-align: center; padding: 10px; background: #ffebee; border-radius: 5px;">
+                            <i class="fas fa-arrow-down" style="color: #e74c3c;"></i>
+                            <span data-en="Expense" data-sw="Matumizi">Expense</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label data-en="Icon" data-sw="Ikoni">Icon</label>
+                <div class="icon-selector" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px;">
+                    <!-- Common icons -->
+                    <button type="button" class="icon-btn" onclick="selectIcon('💰')">💰</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('📱')">📱</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('🚗')">🚗</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('🏠')">🏠</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('🍽️')">🍽️</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('🛒')">🛒</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('📦')">📦</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('💡')">💡</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('👥')">👥</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('📊')">📊</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('🎯')">🎯</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('⚕️')">⚕️</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('📚')">📚</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('👕')">👕</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('💻')">💻</button>
+                    <button type="button" class="icon-btn" onclick="selectIcon('📞')">📞</button>
+                </div>
+                <input type="hidden" id="catIcon" name="icon" value="💰">
+            </div>
+            
+            <div class="form-group">
+                <label for="catColor" data-en="Color" data-sw="Rangi">Color</label>
+                <input type="color" class="form-control" id="catColor" name="color" value="#3498db" style="height: 50px;">
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-save"></i>
+                <span data-en="Save Category" data-sw="Hifadhi Aina">Save Category</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal" id="editCategoryModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-en="Edit Category" data-sw="Hariri Aina">Edit Category</h3>
+            <button class="modal-close" onclick="closeModal('editCategoryModal')">&times;</button>
+        </div>
+        
+        <form id="editCategoryForm" onsubmit="updateCategory(event)">
+            <input type="hidden" id="editCatId" name="category_id">
+            
+            <div class="form-group">
+                <label for="editCatName" data-en="Category Name" data-sw="Jina la Aina">Category Name</label>
+                <input type="text" class="form-control" id="editCatName" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editCatNameSw" data-en="Name in Swahili" data-sw="Jina kwa Kiswahili">
+                    Name in Swahili
+                </label>
+                <input type="text" class="form-control" id="editCatNameSw" name="name_sw">
+            </div>
+            
+            <div class="form-group">
+                <label data-en="Category Type" data-sw="Aina ya Kategoria">Category Type</label>
+                <div class="type-selector" style="display: flex; gap: 10px;">
+                    <label class="type-option" style="flex: 1;">
+                        <input type="radio" name="edit_type" value="income" id="editTypeIncome">
+                        <div style="text-align: center; padding: 10px; background: #e8f5e9; border-radius: 5px;">
+                            <i class="fas fa-arrow-up" style="color: #2ecc71;"></i>
+                            <span data-en="Income" data-sw="Mapato">Income</span>
+                        </div>
+                    </label>
+                    <label class="type-option" style="flex: 1;">
+                        <input type="radio" name="edit_type" value="expense" id="editTypeExpense">
+                        <div style="text-align: center; padding: 10px; background: #ffebee; border-radius: 5px;">
+                            <i class="fas fa-arrow-down" style="color: #e74c3c;"></i>
+                            <span data-en="Expense" data-sw="Matumizi">Expense</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label data-en="Icon" data-sw="Ikoni">Icon</label>
+                <div class="icon-selector" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px;" id="editIconSelector">
+                    <!-- Icons will be populated by JS -->
+                </div>
+                <input type="hidden" id="editCatIcon" name="icon">
+            </div>
+            
+            <div class="form-group">
+                <label for="editCatColor" data-en="Color" data-sw="Rangi">Color</label>
+                <input type="color" class="form-control" id="editCatColor" name="color" style="height: 50px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary" style="flex: 2;">
+                    <i class="fas fa-save"></i>
+                    <span data-en="Update Category" data-sw="Sasisha Aina">Update Category</span>
+                </button>
+                <button type="button" class="btn btn-danger" onclick="deleteCurrentCategory()" style="flex: 1;">
+                    <i class="fas fa-trash"></i>
+                    <span data-en="Delete" data-sw="Futa">Delete</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedIcon = '💰';
+let currentEditId = null;
+
+// Load categories on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategories();
+    loadCategoryStats();
+});
+
+function loadCategories() {
+    fetch('/categories/api/list')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayCategories(data.categories);
+            } else {
+                showError('Error loading categories');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Error loading categories');
+        });
+}
+
+function loadCategoryStats() {
+    fetch('/categories/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('totalCategories').textContent = data.stats.total_categories;
+                document.getElementById('incomeCategories').textContent = data.stats.income_categories;
+                document.getElementById('expenseCategories').textContent = data.stats.expense_categories;
+            }
+        })
+        .catch(error => console.error('Error loading stats:', error));
+}
+
+function displayCategories(categories) {
+    const grid = document.getElementById('categoriesGrid');
+    const currentLang = document.documentElement.lang || 'en';
+    
+    if (categories.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                <i class="fas fa-tags" style="font-size: 48px; color: var(--gray-color);"></i>
+                <h3 data-en="No Categories Yet" data-sw="Hakuna Aina Bado">No Categories Yet</h3>
+                <p data-en="Click 'Add Category' to create your first category" 
+                   data-sw="Bonyeza 'Ongeza Aina' kuunda aina yako ya kwanza">
+                    Click 'Add Category' to create your first category
+                </p>
+            </div>
+        `;
+        updateUIText(currentLang);
+        return;
+    }
+    
+    let html = '';
+    
+    // Separate system and custom categories
+    const systemCategories = categories.filter(c => c.is_system);
+    const customCategories = categories.filter(c => !c.is_system);
+    
+    if (systemCategories.length > 0) {
+        html += '<h3 class="category-section-title" data-en="Default Categories" data-sw="Aina za Msingi">Default Categories</h3>';
+        html += '<div class="category-section">';
+        systemCategories.forEach(cat => {
+            html += createCategoryCard(cat);
+        });
+        html += '</div>';
+    }
+    
+    if (customCategories.length > 0) {
+        html += '<h3 class="category-section-title" data-en="Your Categories" data-sw="Aina Zako">Your Categories</h3>';
+        html += '<div class="category-section">';
+        customCategories.forEach(cat => {
+            html += createCategoryCard(cat);
+        });
+        html += '</div>';
+    }
+    
+    grid.innerHTML = html;
+    updateUIText(currentLang);
+}
+
+function createCategoryCard(category) {
+    const typeIcon = category.type === 'income' ? '↑' : '↓';
+    const typeClass = category.type === 'income' ? 'income' : 'expense';
+    
+    return `
+        <div class="category-item" onclick="editCategory(${category.id})" style="border-left: 5px solid ${category.color};">
+            <div class="category-icon">${category.icon}</div>
+            <div class="category-name">${category.name}</div>
+            <div class="category-type ${typeClass}">${typeIcon} ${category.type}</div>
+            <div class="category-count">${category.transaction_count} transactions</div>
+            ${category.is_system ? '<span class="system-badge" style="font-size: 10px; background: #eee; padding: 2px 5px; border-radius: 3px;">System</span>' : ''}
+        </div>
+    `;
+}
+
+function selectIcon(icon) {
+    selectedIcon = icon;
+    document.getElementById('catIcon').value = icon;
+    
+    // Highlight selected icon
+    document.querySelectorAll('.icon-btn').forEach(btn => {
+        btn.style.background = btn.textContent === icon ? '#667eea' : '#f0f0f0';
+        btn.style.color = btn.textContent === icon ? 'white' : 'black';
+    });
+}
+
+function showAddCategoryModal() {
+    document.getElementById('addCategoryModal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function addCategory(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('addCategoryForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        name: formData.get('name'),
+        name_sw: formData.get('name_sw'),
+        type: document.querySelector('input[name="type"]:checked').value,
+        icon: document.getElementById('catIcon').value,
+        color: document.getElementById('catColor').value
+    };
+    
+    fetch('/categories/api/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal('addCategoryModal');
+            form.reset();
+            selectedIcon = '💰';
+            document.getElementById('catIcon').value = '💰';
+            loadCategories();
+            loadCategoryStats();
+            showSuccess(data.message);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error adding category');
+    });
+}
+
+function editCategory(categoryId) {
+    fetch(`/categories/api/list`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const category = data.categories.find(c => c.id === categoryId);
+                if (category) {
+                    currentEditId = categoryId;
+                    document.getElementById('editCatId').value = category.id;
+                    document.getElementById('editCatName').value = category.name;
+                    document.getElementById('editCatNameSw').value = category.name_sw || '';
+                    
+                    if (category.type === 'income') {
+                        document.getElementById('editTypeIncome').checked = true;
+                    } else {
+                        document.getElementById('editTypeExpense').checked = true;
+                    }
+                    
+                    // Set icon selector
+                    const iconSelector = document.getElementById('editIconSelector');
+                    iconSelector.innerHTML = '';
+                    const icons = ['💰', '📱', '🚗', '🏠', '🍽️', '🛒', '📦', '💡', '👥', '📊', '🎯', '⚕️', '📚', '👕', '💻', '📞'];
+                    icons.forEach(icon => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'icon-btn' + (icon === category.icon ? ' active' : '');
+                        btn.textContent = icon;
+                        btn.onclick = () => {
+                            document.querySelectorAll('#editIconSelector .icon-btn').forEach(b => b.classList.remove('active'));
+                            btn.classList.add('active');
+                            document.getElementById('editCatIcon').value = icon;
+                        };
+                        iconSelector.appendChild(btn);
+                    });
+                    
+                    document.getElementById('editCatIcon').value = category.icon;
+                    document.getElementById('editCatColor').value = category.color;
+                    
+                    document.getElementById('editCategoryModal').style.display = 'flex';
+                }
+            }
+        });
+}
+
+function updateCategory(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('editCategoryForm');
+    const formData = new FormData(form);
+    
+    const data = {
+        name: formData.get('name'),
+        name_sw: formData.get('name_sw'),
+        type: document.querySelector('input[name="edit_type"]:checked').value,
+        icon: document.getElementById('editCatIcon').value,
+        color: document.getElementById('editCatColor').value
+    };
+    
+    fetch(`/categories/api/${currentEditId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal('editCategoryModal');
+            loadCategories();
+            showSuccess(data.message);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error updating category');
+    });
+}
+
+function deleteCurrentCategory() {
+    if (!confirm('Are you sure you want to delete this category?')) {
+        return;
+    }
+    
+    fetch(`/categories/api/${currentEditId}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal('editCategoryModal');
+            loadCategories();
+            loadCategoryStats();
+            showSuccess(data.message);
+        } else {
+            showError(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('Error deleting category');
+    });
+}
+
+function showSuccess(message) {
+    // Show success message (you can implement this)
+    alert(message);
+}
+
+function showError(message) {
+    // Show error message (you can implement this)
+    alert('Error: ' + message);
+}
+</script>
+{% endblock %}

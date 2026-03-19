@@ -1,0 +1,105 @@
+/* Mobile-specific styles */
+@media (max-width: 480px) {
+    :root {
+        --spacing: 12px;
+        --font-large: 16px;
+        --font-medium: 14px;
+        --font-small: 12px;
+    }
+    
+    /* Larger touch targets */
+    .btn, 
+    .nav-item,
+    .form-control,
+    .category-item,
+    .transaction-item {
+        min-height: 52px;
+    }
+    
+    /* Stack cards on mobile */
+    .summary-cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .summary-card.net {
+        grid-column: span 1;
+    }
+    
+    /* Adjust bottom nav for small screens */
+    .nav-item span {
+        font-size: 10px;
+    }
+    
+    .nav-item i {
+        font-size: 18px;
+    }
+    
+    /* Full-width modals on mobile */
+    .modal-content {
+        max-height: 90vh;
+        margin: 10px;
+    }
+    
+    /* Thumb-friendly filters */
+    .filter-row {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .filter-row .btn {
+        width: 100%;
+    }
+    
+    /* Larger checkboxes and radio buttons */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+    
+    /* Easy-to-tap list items */
+    .transaction-item {
+        padding: 15px 12px;
+    }
+    
+    /* Bottom padding for fixed elements */
+    body {
+        padding-bottom: 70px;
+    }
+    
+    /* Floating action button adjustments */
+    .nav-item.add-btn {
+        width: 56px;
+        height: 56px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) and (max-height: 480px) {
+    .bottom-nav {
+        padding: 4px 0;
+    }
+    
+    .modal-content {
+        max-height: 80vh;
+    }
+}
+
+/* High contrast mode for better visibility */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #006600;
+        --danger-color: #cc0000;
+    }
+}
+
+/* Reduce motion if user prefers */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
