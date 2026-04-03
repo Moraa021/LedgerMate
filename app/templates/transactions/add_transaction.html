@@ -3,247 +3,149 @@
 {% block title %}Add Transaction{% endblock %}
 
 {% block content %}
-<div class="add-transaction">
-    <h1 data-en="Add New Transaction" data-sw="Ongeza Muamala Mpya">Add New Transaction</h1>
-    
-    <form method="POST" class="transaction-form" id="transactionForm">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <!-- Transaction Type Toggle -->
-        <div class="form-group">
-            <label data-en="Transaction Type" data-sw="Aina ya Muamala">Transaction Type</label>
-            <div class="type-toggle">
-                <button type="button" class="type-btn income active" onclick="setType('income')">
-                    <i class="fas fa-arrow-up"></i>
-                    <span data-en="Income" data-sw="Mapato">Income</span>
-                </button>
-                <button type="button" class="type-btn expense" onclick="setType('expense')">
-                    <i class="fas fa-arrow-down"></i>
-                    <span data-en="Expense" data-sw="Matumizi">Expense</span>
-                </button>
+<div class="container mt-4">
+    <div class="card shadow-sm border-0 mx-auto" style="max-width: 600px; border-radius: 15px;">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0">New Transaction</h3>
+                <a href="{{ url_for('transactions.transactions') }}" class="btn-close" aria-label="Close"></a>
             </div>
-            <input type="hidden" name="type" id="transactionType" value="income">
+            
+            <form method="POST" id="transactionForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="mb-4">
+                    <label class="form-label d-block fw-bold small text-muted text-uppercase mb-2">Transaction Type</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="type" id="type_income" value="income" checked autocomplete="off">
+                        <label class="btn btn-outline-success py-2 fw-bold" for="type_income">
+                            <i class="fas fa-plus-circle me-1"></i> INCOME
+                        </label>
+
+                        <input type="radio" class="btn-check" name="type" id="type_expense" value="expense" autocomplete="off">
+                        <label class="btn btn-outline-danger py-2 fw-bold" for="type_expense">
+                            <i class="fas fa-minus-circle me-1"></i> EXPENSE
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-7">
+                        <label class="form-label fw-bold small text-uppercase">Amount (KES)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">Sh</span>
+                            <input type="number" name="amount" class="form-control form-control-lg border-start-0" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <label class="form-label fw-bold small text-uppercase">Date</label>
+                        <input type="date" name="transaction_date" class="form-control form-control-lg" value="{{ today }}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Category</label>
+                    <select name="category_id" id="categorySelect" class="form-select form-select-lg" required>
+                        <option value="" disabled selected>Choose a category...</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" data-type="{{ category.type }}">
+                            {{ category.icon or '📁' }} {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Payment Method</label>
+                    <select name="payment_method" id="paymentMethod" class="form-select form-select-lg" required>
+                        <option value="cash">Cash</option>
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="bank">Bank Transfer</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 d-none animate__animated animate__fadeIn" id="mpesaGroup">
+                    <label class="form-label small fw-bold text-primary text-uppercase">M-Pesa Confirmation Code</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-primary text-white"><i class="fas fa-mobile-alt"></i></span>
+                        <input type="text" name="mpesa_code" id="mpesa_code" class="form-control border-primary" placeholder="e.g. RBT45X90" style="text-transform: uppercase;">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">Description</label>
+                    <input type="text" name="description" class="form-control" placeholder="What was this for?">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Additional Notes (Optional)</label>
+                    <textarea name="additional_info" class="form-control" rows="2" placeholder="Any extra details..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100 py-3 fw-bold shadow-sm rounded-pill">
+                    <i class="fas fa-check-circle me-2"></i>SAVE TRANSACTION
+                </button>
+            </form>
         </div>
-        
-        <!-- Amount -->
-        <div class="form-group">
-            <label for="amount" data-en="Amount (KES)" data-sw="Kiasi (KES)">Amount (KES)</label>
-            <input type="number" 
-                   class="form-control" 
-                   id="amount" 
-                   name="amount" 
-                   step="0.01" 
-                   min="0" 
-                   required 
-                   placeholder="0.00"
-                   data-en-placeholder="Enter amount"
-                   data-sw-placeholder="Weka kiasi">
-        </div>
-        
-        <!-- Category -->
-        <div class="form-group">
-            <label for="category" data-en="Category" data-sw="Aina">Category</label>
-            <select class="form-control" id="category" name="category_id" required>
-                <option value="" data-en="Select category" data-sw="Chagua aina">Select category</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}" 
-                            data-type="{{ category.type }}"
-                            class="category-option {{ category.type }}">
-                        {{ category.name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        
-        <!-- Payment Method -->
-        <div class="form-group">
-            <label data-en="Payment Method" data-sw="Njia ya Malipo">Payment Method</label>
-            <div class="payment-methods">
-                <label class="payment-option">
-                    <input type="radio" name="payment_method" value="cash" checked>
-                    <i class="fas fa-money-bill-wave"></i>
-                    <span data-en="Cash" data-sw="Taslimu">Cash</span>
-                </label>
-                <label class="payment-option">
-                    <input type="radio" name="payment_method" value="mpesa">
-                    <i class="fas fa-mobile-alt"></i>
-                    <span data-en="M-Pesa" data-sw="M-Pesa">M-Pesa</span>
-                </label>
-                <label class="payment-option">
-                    <input type="radio" name="payment_method" value="other">
-                    <i class="fas fa-credit-card"></i>
-                    <span data-en="Other" data-sw="Nyingine">Other</span>
-                </label>
-            </div>
-        </div>
-        
-        <!-- M-Pesa Code (shown only when M-Pesa selected) -->
-        <div class="form-group" id="mpesaCodeGroup" style="display: none;">
-            <label for="mpesa_code" data-en="M-Pesa Confirmation Code" data-sw="Nambari ya Uthibitisho ya M-Pesa">
-                M-Pesa Confirmation Code
-            </label>
-            <input type="text" 
-                   class="form-control" 
-                   id="mpesa_code" 
-                   name="mpesa_code" 
-                   placeholder="e.g., QW12RT34"
-                   data-en-placeholder="Enter M-Pesa code"
-                   data-sw-placeholder="Weka nambari ya M-Pesa">
-        </div>
-        
-        <!-- Date -->
-        <div class="form-group">
-            <label for="transaction_date" data-en="Date" data-sw="Tarehe">Date</label>
-            <input type="date" 
-                   class="form-control" 
-                   id="transaction_date" 
-                   name="transaction_date" 
-                   value="{{ today }}">
-        </div>
-        
-        <!-- Description -->
-        <div class="form-group">
-            <label for="description" data-en="Description" data-sw="Maelezo">Description</label>
-            <textarea class="form-control" 
-                      id="description" 
-                      name="description" 
-                      rows="2"
-                      data-en-placeholder="Enter description (optional)"
-                      data-sw-placeholder="Weka maelezo (si lazima)"></textarea>
-        </div>
-        
-        <!-- Additional Information -->
-        <div class="form-group">
-            <label for="additional_info" data-en="Additional Information" data-sw="Maelezo ya Ziada">
-                Additional Information
-            </label>
-            <textarea class="form-control" 
-                      id="additional_info" 
-                      name="additional_info" 
-                      rows="2"
-                      data-en-placeholder="Any extra details (optional)"
-                      data-sw-placeholder="Maelezo yoyote ya ziada (si lazima)"></textarea>
-        </div>
-        
-        <!-- Submit Buttons -->
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary btn-block">
-                <i class="fas fa-save"></i>
-                <span data-en="Save Transaction" data-sw="Hifadhi Muamala">Save Transaction</span>
-            </button>
-            <a href="{{ url_for('transactions.transactions') }}" class="btn btn-block" style="background: #eee; margin-top: 10px;">
-                <span data-en="Cancel" data-sw="Ghairi">Cancel</span>
-            </a>
-        </div>
-    </form>
+    </div>
 </div>
 
-<!-- Quick Tips -->
-<div class="card mt-3">
-    <h3 data-en="Quick Tips" data-sw="Vidokezo">Quick Tips</h3>
-    <ul style="margin-left: 20px;">
-        <li data-en="Use categories to organize your transactions" 
-            data-sw="Tumia aina kupanga miamala yako">
-            Use categories to organize your transactions
-        </li>
-        <li data-en="Add M-Pesa codes to easily verify mobile payments" 
-            data-sw="Ongeza nambari za M-Pesa kuthibitisha malipo">
-            Add M-Pesa codes to easily verify mobile payments
-        </li>
-        <li data-en="Include descriptions to remember transaction details" 
-            data-sw="Weka maelezo kukumbuka undani wa muamala">
-            Include descriptions to remember transaction details
-        </li>
-    </ul>
-</div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-// Set transaction type
-function setType(type) {
-    document.getElementById('transactionType').value = type;
-    
-    // Update button styles
-    document.querySelectorAll('.type-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`.type-btn.${type}`).classList.add('active');
-    
-    // Filter categories by type
-    filterCategories(type);
-}
-
-// Filter categories based on transaction type
-function filterCategories(type) {
-    const categorySelect = document.getElementById('category');
-    const options = categorySelect.querySelectorAll('option');
-    
-    options.forEach(opt => {
-        if (opt.value === '') return; // Skip placeholder
-        
-        const optType = opt.getAttribute('data-type');
-        if (optType === type) {
-            opt.style.display = '';
-        } else {
-            opt.style.display = 'none';
-        }
-    });
-    
-    // Reset selection
-    categorySelect.value = '';
-}
-
-// Show/hide M-Pesa code field based on payment method
-document.querySelectorAll('input[name="payment_method"]').forEach(radio => {
-    radio.addEventListener('change', function() {
-        const mpesaGroup = document.getElementById('mpesaCodeGroup');
-        if (this.value === 'mpesa') {
-            mpesaGroup.style.display = 'block';
-            document.getElementById('mpesa_code').required = true;
-        } else {
-            mpesaGroup.style.display = 'none';
-            document.getElementById('mpesa_code').required = false;
-        }
-    });
-});
-
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Set initial type
-    setType('income');
-    
-    // Update placeholders based on language
-    const currentLang = document.documentElement.lang || 'en';
-    updateUIText(currentLang);
-});
+    // Selectors
+    const typeRadios = document.querySelectorAll('input[name="type"]');
+    const categorySelect = document.getElementById('categorySelect');
+    const categoryOptions = categorySelect.querySelectorAll('option');
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    const mpesaGroup = document.getElementById('mpesaGroup');
+    const mpesaInput = document.getElementById('mpesa_code');
 
-// Form validation
-document.getElementById('transactionForm').addEventListener('submit', function(e) {
-    const amount = document.getElementById('amount').value;
-    const category = document.getElementById('category').value;
-    
-    if (!amount || amount <= 0) {
-        e.preventDefault();
-        alert('Please enter a valid amount');
-        return;
+    // --- Logic 1: Filter Categories by Type (Income/Expense) ---
+    function filterCategories() {
+        const activeType = document.querySelector('input[name="type"]:checked').value;
+        categorySelect.value = ""; // Clear current selection
+        
+        categoryOptions.forEach(opt => {
+            if (!opt.value) return; // Skip placeholder
+            const optType = opt.getAttribute('data-type');
+            opt.style.display = (optType === activeType) ? 'block' : 'none';
+        });
     }
-    
-    if (!category) {
-        e.preventDefault();
-        alert('Please select a category');
-        return;
-    }
-    
-    // Check M-Pesa code if method is mpesa
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
-    if (paymentMethod === 'mpesa') {
-        const mpesaCode = document.getElementById('mpesa_code').value;
-        if (!mpesaCode) {
-            e.preventDefault();
-            alert('Please enter M-Pesa confirmation code');
-            return;
+
+    // --- Logic 2: Toggle M-Pesa Code Visibility ---
+    function toggleMpesaField() {
+        if (paymentMethodSelect.value === 'mpesa') {
+            mpesaGroup.classList.remove('d-none');
+            mpesaInput.setAttribute('required', 'true');
+        } else {
+            mpesaGroup.classList.add('d-none');
+            mpesaInput.removeAttribute('required');
+            mpesaInput.value = ""; // Clear if hidden
         }
     }
+
+    // Event Listeners
+    typeRadios.forEach(radio => radio.addEventListener('change', filterCategories));
+    paymentMethodSelect.addEventListener('change', toggleMpesaField);
+
+    // Run on startup
+    filterCategories();
+    toggleMpesaField();
 });
 </script>
+
+<style>
+    /* Styling to make the form look modern */
+    .form-control-lg, .form-select-lg {
+        border-radius: 10px;
+        font-size: 1rem;
+    }
+    .btn-group .btn {
+        border-radius: 10px !important;
+        margin: 0 5px;
+    }
+    .card {
+        background: #fdfdfd;
+    }
+</style>
 {% endblock %}

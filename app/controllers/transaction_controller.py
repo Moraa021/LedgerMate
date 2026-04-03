@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app.models import Transaction, Category
 from app.extensions import db
 from datetime import datetime
+from sqlalchemy.orm import joinedload
 import uuid
 
 bp = Blueprint('transactions', __name__, url_prefix='/transactions')
@@ -16,66 +17,65 @@ def transactions():
 @bp.route('/add', methods=['GET', 'POST'])
 @login_required
 def add_transaction():
-    """Add new transaction"""
     if request.method == 'POST':
         try:
-            # Get form data
-            transaction_type = request.form.get('type')
-            amount = request.form.get('amount')
+            # 1. Capture Form Data
+            transaction_type = request.form.get('type') 
+            amount = float(request.form.get('amount', 0))
             category_id = request.form.get('category_id')
             payment_method = request.form.get('payment_method')
-            description = request.form.get('description')
-            transaction_date = request.form.get('transaction_date')
+            description = request.form.get('description', '')
+            transaction_date_str = request.form.get('transaction_date')
             mpesa_code = request.form.get('mpesa_code')
+
+            # 2. Date Parsing
+            trans_date = datetime.strptime(transaction_date_str, '%Y-%m-%d') if transaction_date_str else datetime.utcnow()
+
+            # 3. Handle M-Pesa Code & Additional Info
+            # We store the M-Pesa code inside the additional_info JSON field
+            add_info_content = request.form.get('additional_info', '')
+            additional_info = {"notes": add_info_content}
             
-            # Additional info as JSON
-            additional_info = {}
             if payment_method == 'mpesa' and mpesa_code:
                 additional_info['mpesa_code'] = mpesa_code
-            
-            # Parse date
-            if transaction_date:
-                trans_date = datetime.strptime(transaction_date, '%Y-%m-%d')
-            else:
-                trans_date = datetime.utcnow()
-            
-            # Create transaction
-            transaction = Transaction(
+
+            # 4. Create and Save Transaction
+            new_transaction = Transaction(
                 public_id=str(uuid.uuid4()),
                 user_id=current_user.id,
                 type=transaction_type,
                 amount=amount,
                 category_id=category_id,
                 payment_method=payment_method,
-                description=description,
+                description=description, # Primary description field
                 transaction_date=trans_date,
-                additional_info=additional_info
+                additional_info=additional_info, # JSON field for codes/notes
+                is_deleted=False
             )
-            
-            db.session.add(transaction)
+
+            db.session.add(new_transaction)
             db.session.commit()
-            
-            flash('Transaction added successfully!', 'success')
-            return redirect(url_for('transactions.transactions'))
-            
+
+            flash('Transaction recorded!', 'success')
+            return redirect(url_for('main.dashboard'))
+
         except Exception as e:
             db.session.rollback()
-            flash(f'Error adding transaction: {str(e)}', 'error')
+            flash(f'Error: {str(e)}', 'danger')
+
+    categories = Category.query.filter_by(user_id=current_user.id).all()
+    today = datetime.utcnow().strftime('%Y-%m-%d')
     
-    # Get categories for form
-    categories = Category.query.filter_by(
-        user_id=current_user.id
-    ).all()
-    today_date = datetime.utcnow().strftime('%Y-%m-%d')
-    
-    return render_template('transactions/add_transaction.html', categories=categories,today=today_date)
+    return render_template('transactions/add_transaction.html', categories=categories, today=today)
 
 @bp.route('/api/list')
 @login_required
 def list_transactions():
-    """API endpoint to list transactions with filtering"""
+    """API endpoint to list transactions with optimized filtering"""
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
+    
+    # Get parameters from request
     transaction_type = request.args.get('type')
     category_id = request.args.get('category_id')
     payment_method = request.args.get('payment_method')
@@ -83,55 +83,55 @@ def list_transactions():
     to_date = request.args.get('to_date')
     search = request.args.get('search')
     
-    # Build query
-    query = Transaction.query.filter_by(
+    # Build query with joinedload for performance
+    query = Transaction.query.options(joinedload(Transaction.category)).filter_by(
         user_id=current_user.id,
         is_deleted=False
     )
     
-    # Apply filters
-    if transaction_type:
+    # Apply filters - checking for 'all' to prevent zero-result bugs
+    if transaction_type and transaction_type != 'all':
         query = query.filter_by(type=transaction_type)
     
-    if category_id:
+    if category_id and category_id != 'all':
         query = query.filter_by(category_id=category_id)
     
-    if payment_method:
+    if payment_method and payment_method != 'all':
         query = query.filter_by(payment_method=payment_method)
     
-    if from_date:
-        query = query.filter(Transaction.transaction_date >= datetime.strptime(from_date, '%Y-%m-%d'))
-    
-    if to_date:
-        query = query.filter(Transaction.transaction_date <= datetime.strptime(to_date, '%Y-%m-%d'))
+    try:
+        if from_date:
+            query = query.filter(Transaction.transaction_date >= datetime.strptime(from_date, '%Y-%m-%d'))
+        if to_date:
+            query = query.filter(Transaction.transaction_date <= datetime.strptime(to_date, '%Y-%m-%d'))
+    except ValueError:
+        pass # Ignore malformed dates
     
     if search:
         query = query.filter(Transaction.description.ilike(f'%{search}%'))
     
-    # Order by date (newest first)
-    query = query.order_by(Transaction.transaction_date.desc())
+    # Order and paginate
+    paginated = query.order_by(Transaction.transaction_date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     
-    # Paginate
-    paginated = query.paginate(page=page, per_page=per_page, error_out=False)
-    
-    # Format transactions
-    transactions = []
+    # Format transactions efficiently
+    transactions_list = []
     for t in paginated.items:
-        category = Category.query.get(t.category_id)
-        transactions.append({
+        transactions_list.append({
             'id': t.public_id,
             'type': t.type,
             'amount': float(t.amount),
-            'category': category.name if category else 'Unknown',
+            'category': t.category.name if t.category else 'Unknown',
             'payment_method': t.payment_method,
             'description': t.description,
-            'date': t.transaction_date.strftime('%Y-%m-%d %H:%M'),
-            'mpesa_code': t.mpesa_code
+            'date': t.transaction_date.strftime('%d %b %Y %H:%M'),
+            'mpesa_code': getattr(t, 'mpesa_code', None)
         })
     
     return jsonify({
         'success': True,
-        'transactions': transactions,
+        'transactions': transactions_list,
         'total': paginated.total,
         'page': page,
         'pages': paginated.pages,
@@ -148,8 +148,6 @@ def get_transaction(transaction_id):
         is_deleted=False
     ).first_or_404()
     
-    category = Category.query.get(transaction.category_id)
-    
     return jsonify({
         'success': True,
         'transaction': {
@@ -157,11 +155,11 @@ def get_transaction(transaction_id):
             'type': transaction.type,
             'amount': float(transaction.amount),
             'category_id': transaction.category_id,
-            'category': category.name if category else 'Unknown',
+            'category': transaction.category.name if transaction.category else 'Unknown',
             'payment_method': transaction.payment_method,
             'description': transaction.description,
             'date': transaction.transaction_date.strftime('%Y-%m-%d'),
-            'mpesa_code': transaction.mpesa_code,
+            'mpesa_code': getattr(transaction, 'mpesa_code', None),
             'additional_info': transaction.additional_info
         }
     })
@@ -178,11 +176,11 @@ def update_transaction(transaction_id):
     
     data = request.get_json()
     
-    # Update fields
+    # Update fields safely
     if 'type' in data:
         transaction.type = data['type']
     if 'amount' in data:
-        transaction.amount = data['amount']
+        transaction.amount = float(data['amount'])
     if 'category_id' in data:
         transaction.category_id = data['category_id']
     if 'payment_method' in data:

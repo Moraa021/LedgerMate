@@ -15,13 +15,14 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
+
     
+    <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <!-- Language Toggle -->
-    <div class="language-toggle">
+   <!-- <div class="language-toggle">
         <button class="lang-btn {% if session.get('language') == 'en' %}active{% endif %}" 
                 onclick="changeLanguage('en')">
             🇬🇧 English
@@ -31,7 +32,7 @@
             🇰🇪 Kiswahili
         </button>
     </div>
-    
+    -->
     <!-- Flash Messages -->
     <div class="flash-messages" id="flashMessages">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -127,7 +128,6 @@
     </div>
     
     <!-- JavaScript -->
-    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
     <script src="{{ url_for('static', filename='js/translations.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     

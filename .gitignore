@@ -1,4 +1,19 @@
-venv/ 
-venv31/ 
-*.db 
-__pycache__/ 
+# Python virtual environments
+venv31/
+venv_compat/
+
+# Local database and instance folder
+instance/
+*.db
+
+# Sensitive credentials
+.env
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Deployment & OS junk
+.vercel/
+.vercelignore
+.DS_Store

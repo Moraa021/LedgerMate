@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, session, jsonify, request
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, session, jsonify, request, flash, redirect, url_for
+from flask_login import login_required, current_user, logout_user
 from app.models import Transaction, Category
 from app.extensions import db
 from datetime import datetime, timedelta
@@ -9,15 +9,13 @@ bp = Blueprint('main', __name__)
 
 @bp.route('/')
 def index():
-    """Home page / Landing page"""
     if current_user.is_authenticated:
-        return render_template('dashboard/dashboard.html')
+        return redirect(url_for('main.dashboard'))
     return render_template('index.html')
 
 @bp.route('/dashboard')
 @login_required
 def dashboard():
-    """Main dashboard with financial overview"""
     return render_template('dashboard/dashboard.html')
 
 @bp.route('/api/dashboard/stats')
@@ -134,41 +132,115 @@ def dashboard_stats():
         }
     })
 
+
+# --- NEW LOGOUT ROUTE ---
+@bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('main.index'))
+
 @bp.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    if request.method == 'POST':
-        # Handle profile updates here (optional for now)
-        pass
+    # 1. Setup initial data for the GET request
+    categories = Category.query.filter_by(user_id=current_user.id).all()
 
-    # Dummy stats to prevent the template from crashing
+    income_total = db.session.query(func.sum(Transaction.amount)).filter_by(
+        user_id=current_user.id, type='income', is_deleted=False
+    ).scalar() or 0
+    
+    expense_total = db.session.query(func.sum(Transaction.amount)).filter_by(
+        user_id=current_user.id, type='expense', is_deleted=False
+    ).scalar() or 0
+
+    total_transactions = Transaction.query.filter_by(
+        user_id=current_user.id, is_deleted=False
+    ).count()
+
     stats = {
-        'member_since': current_user.created_at.strftime('%d %b %Y') if hasattr(current_user, 'created_at') else "Mar 2026",
-        'total_transactions': Transaction.query.filter_by(user_id=current_user.id, is_deleted=False).count(),
-        'category_count': Category.query.filter_by(user_id=current_user.id).count(),
-        'net_total': db.session.query(func.sum(Transaction.amount)).filter_by(user_id=current_user.id, type='income').scalar() or 0 - 
-                     (db.session.query(func.sum(Transaction.amount)).filter_by(user_id=current_user.id, type='expense').scalar() or 0),
-        'income_total': 0, 'expense_total': 0, 'month_income': 0, 'month_expense': 0, 'month_net': 0
+        'income_total': float(income_total),
+        'expense_total': float(expense_total),
+        'net_total': float(income_total - expense_total),
+        'total_transactions': total_transactions,
+        'member_since': current_user.created_at.strftime('%d %b %Y') if hasattr(current_user, 'created_at') and current_user.created_at else "Mar 2026"
     }
-    return render_template('profile.html', stats=stats)
 
-@bp.route('/set-language', methods=['POST'])
-def set_language():
-    # This line handles both JSON and Form data automatically
-    if request.is_json:
-        data = request.get_json()
-    else:
-        data = request.form
+    # 2. Handle Form Submissions (POST)
+    if request.method == 'POST':
+        action = request.form.get('action')
         
-    language = data.get('language')
+        if action == 'update_profile':
+            current_user.business_name = request.form.get('business_name')
+            current_user.email = request.form.get('email')
+            db.session.commit()
+            flash('Profile updated successfully!', 'success')
+            return redirect(url_for('main.profile'))
+            
+        elif action == 'add_category':
+            name = request.form.get('category_name')
+            category_type = request.form.get('category_type')
+            
+            if not name or not category_type:
+                flash('Please provide both a category name and a type.', 'warning')
+            else:
+                try:
+                    new_cat = Category(
+                        name=name, 
+                        type=category_type,
+                        user_id=current_user.id,
+                        icon='📁',
+                        color='#3498db',
+                        is_system=False
+                    )
+                    db.session.add(new_cat)
+                    db.session.commit()
+                    flash(f'Category "{name}" ({category_type}) added successfully!', 'success')
+                except Exception as e:
+                    db.session.rollback()
+                    flash('An error occurred while saving the category.', 'danger')
+            return redirect(url_for('main.profile'))
+        
+        elif action == 'delete_category':
+            cat_id = request.form.get('category_id')
+            cat = Category.query.filter_by(id=cat_id, user_id=current_user.id).first()
+            if cat:
+                db.session.delete(cat)
+                db.session.commit()
+                flash('Category removed.', 'info')
+            return redirect(url_for('main.profile'))
 
-    if language in ['en', 'sw']:
-        session['language'] = language
-        # If you have a user model, save it there too
-        if current_user.is_authenticated:
-            current_user.language = language
+        elif action == 'change_password':
+            new_pass = request.form.get('new_password')
+            if new_pass:
+                current_user.set_password(new_pass)
+                db.session.commit()
+                flash('Password updated! Please log in again.', 'success')
+                logout_user()
+                # Use 'auth.login' or whatever your login route is named
+                return redirect(url_for('auth.login'))
+
+        elif action == 'delete_account':
+            # 1. Delete all associated user data first
+            Transaction.query.filter_by(user_id=current_user.id).delete()
+            Category.query.filter_by(user_id=current_user.id).all()
+            
+            # 2. Get the ACTUAL User object, not the Proxy
+            user_to_delete = current_user._get_current_object()
+            
+            # 3. Log them out BEFORE deleting the record
+            logout_user() 
+            
+            # 4. Delete the actual user record
+            db.session.delete(user_to_delete)
             db.session.commit()
             
-        return jsonify({'success': True}), 200
-    
-    return jsonify({'success': False, 'error': 'Invalid language'}), 400
+            flash('Your account and all associated data have been deleted.', 'warning')
+            return redirect(url_for('main.index'))
+
+    # 3. Final Return for GET requests (and if POST falls through)
+    return render_template('profile.html', 
+                           title='Profile', 
+                           stats=stats, 
+                           categories=categories)
