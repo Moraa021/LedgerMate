@@ -4,7 +4,8 @@ from app.extensions import db, login_manager, migrate, csrf
 import os
 
 def create_app(config_name='default'):
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
     
     # Load configuration
     app.config.from_object(config[config_name])
