@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, send_file, sessi
 from flask_login import login_required, current_user
 from app.services.report_service import report_service
 from app.services.export_service import export_service
-from datetime import datetime
+from datetime import datetime, timedelta
 import io
 
 bp = Blueprint('reports', __name__, url_prefix='/reports')
@@ -35,7 +35,7 @@ def generate_report():
             if to_date_str:
                 to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
         
-        # Generate report
+        # Generate report from service
         report = report_service.generate_report(
             user_id=current_user.id,
             period=period,
@@ -44,6 +44,27 @@ def generate_report():
             transaction_type=transaction_type,
             category_id=category_id if category_id != 'all' else None
         )
+        
+        # --- Format transactions to ensure category_name is passed to the frontend ---
+        formatted_transactions = []
+        for t in report.get('transactions', []):
+            # Resolve Category Name
+            cat_name = "General"
+            if isinstance(t, dict):
+                # Try common keys returned by services
+                cat_name = t.get('category_name') or t.get('category') or "General"
+            elif hasattr(t, 'category') and t.category:
+                cat_name = t.category.name
+
+            # Build standardized dictionary for the frontend AJAX call
+            formatted_transactions.append({
+                'date': t['date'] if isinstance(t, dict) else t.date.strftime('%Y-%m-%d'),
+                'type': t['type'] if isinstance(t, dict) else t.type,
+                'category_name': cat_name,
+                'description': t.get('description', '-') if isinstance(t, dict) else (t.description or '-'),
+                'payment_method': t.get('payment_method', 'Cash') if isinstance(t, dict) else (t.payment_method or 'Cash'),
+                'amount': float(t['amount']) if isinstance(t, dict) else float(t.amount)
+            })
         
         # Prepare chart data
         chart_data = {
@@ -61,7 +82,7 @@ def generate_report():
             'success': True,
             'summary': report['summary'],
             'category_breakdown': report['category_breakdown'],
-            'transactions': report['transactions'],
+            'transactions': formatted_transactions,
             'chart_data': chart_data,
             'period': report['period'],
             'from_date': report['from_date'],
@@ -107,7 +128,6 @@ def export_report():
             category_id=category_id if category_id != 'all' else None
         )
         
-        # Export based on format
         filename = export_service.get_filename(
             f"ledgermate_report_{period}", 
             format_type, 
@@ -145,7 +165,6 @@ def export_report():
             )
             
         elif format_type == 'print':
-            # For print, return HTML that's optimized for printing
             return render_template(
                 'reports/print_report.html',
                 report=report,
@@ -171,12 +190,10 @@ def monthly_report(year, month):
     """Get monthly report for specific month"""
     try:
         report = report_service.get_monthly_summary(current_user.id, year, month)
-        
         return jsonify({
             'success': True,
             'report': report
         })
-        
     except Exception as e:
         return jsonify({
             'success': False,
@@ -189,12 +206,10 @@ def yearly_report(year):
     """Get yearly report"""
     try:
         report = report_service.get_year_summary(current_user.id, year)
-        
         return jsonify({
             'success': True,
             'report': report
         })
-        
     except Exception as e:
         return jsonify({
             'success': False,
@@ -217,13 +232,11 @@ def compare_periods():
                 'error': 'All period dates are required'
             }), 400
         
-        # Parse dates
         p1_start = datetime.strptime(period1_start, '%Y-%m-%d').date()
         p1_end = datetime.strptime(period1_end, '%Y-%m-%d').date()
         p2_start = datetime.strptime(period2_start, '%Y-%m-%d').date()
         p2_end = datetime.strptime(period2_end, '%Y-%m-%d').date()
         
-        # Compare periods
         comparison = report_service.compare_periods(
             current_user.id,
             p1_start, p1_end,
@@ -234,7 +247,6 @@ def compare_periods():
             'success': True,
             'comparison': comparison
         })
-        
     except Exception as e:
         return jsonify({
             'success': False,
@@ -246,7 +258,6 @@ def compare_periods():
 def get_insights():
     """Get financial insights and trends"""
     try:
-        # Get last 3 months of data
         today = datetime.utcnow().date()
         three_months_ago = today - timedelta(days=90)
         
@@ -266,7 +277,6 @@ def get_insights():
             'trend': 'stable'
         }
         
-        # Calculate averages
         daily_data = report.get('daily_breakdown', [])
         if daily_data:
             total_income = sum(d['income'] for d in daily_data)
@@ -276,12 +286,10 @@ def get_insights():
             insights['average_daily_income'] = total_income / days if days > 0 else 0
             insights['average_daily_expense'] = total_expense / days if days > 0 else 0
             
-            # Find highest days
             if daily_data:
                 insights['highest_income_day'] = max(daily_data, key=lambda x: x['income'])
                 insights['highest_expense_day'] = max(daily_data, key=lambda x: x['expense'])
         
-        # Find most used category
         categories = report.get('category_breakdown', {})
         if categories:
             insights['most_used_category'] = max(
@@ -289,7 +297,6 @@ def get_insights():
                 key=lambda x: x[1]['count']
             )[1]['name']
         
-        # Determine trend
         if len(daily_data) >= 30:
             first_half = daily_data[:15]
             second_half = daily_data[-15:]
@@ -308,7 +315,6 @@ def get_insights():
             'success': True,
             'insights': insights
         })
-        
     except Exception as e:
         return jsonify({
             'success': False,

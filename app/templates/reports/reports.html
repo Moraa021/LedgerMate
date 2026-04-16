@@ -13,14 +13,10 @@
             <div class="form-group" style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 600;" data-en="Report Period" data-sw="Kipindi cha Ripoti">Report Period</label>
                 <div class="period-selector" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" class="period-btn btn btn-outline-primary active" onclick="setPeriod('daily', event)" 
-                            data-en="Daily" data-sw="Kila Siku">Daily</button>
-                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('weekly', event)"
-                            data-en="Weekly" data-sw="Kila Wiki">Weekly</button>
-                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('monthly', event)"
-                            data-en="Monthly" data-sw="Kila Mwezi">Monthly</button>
-                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('custom', event)"
-                            data-en="Custom" data-sw="Maalum">Custom</button>
+                    <button type="button" class="period-btn btn btn-outline-primary active" onclick="setPeriod('daily', event)" data-en="Daily" data-sw="Kila Siku">Daily</button>
+                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('weekly', event)" data-en="Weekly" data-sw="Kila Wiki">Weekly</button>
+                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('monthly', event)" data-en="Monthly" data-sw="Kila Mwezi">Monthly</button>
+                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('custom', event)" data-en="Custom" data-sw="Maalum">Custom</button>
                 </div>
             </div>
             
@@ -28,11 +24,11 @@
                 <div class="row">
                     <div class="col-md-6 form-group">
                         <label for="from_date" data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
-                        <input type="date" class="form-control" id="from_date" name="from_date">
+                        <input type="date" class="form-control" id="from_date">
                     </div>
                     <div class="col-md-6 form-group">
                         <label for="to_date" data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
-                        <input type="date" class="form-control" id="to_date" name="to_date">
+                        <input type="date" class="form-control" id="to_date">
                     </div>
                 </div>
             </div>
@@ -48,7 +44,7 @@
                 </div>
                 
                 <div class="col-md-6 form-group" style="margin-bottom: 20px;">
-                    <label style="font-weight: 600;" data-en="Category" data-sw="Aina">Category</label>
+                    <label style="font-weight: 600;" data-en="Category" data-sw="Aina">Category Filter (For Export)</label>
                     <select class="form-control" id="reportCategory">
                         <option value="all" data-en="All Categories" data-sw="Aina Zote">All Categories</option>
                     </select>
@@ -56,7 +52,7 @@
             </div>
 
             <div class="export-options mb-3">
-                <label class="fw-bold d-block mb-2" data-en="Export Format" data-sw="Umbizo la Hamisha">Export Format</label>
+                <label class="fw-bold d-block mb-2">Export Report</label>
                 <div class="btn-group w-100">
                     <button class="btn btn-outline-secondary" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
                     <button class="btn btn-outline-secondary" onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> CSV</button>
@@ -75,12 +71,9 @@
         <div class="report-header d-flex justify-content-between align-items-start mb-4">
             <h3 data-en="Report Results" data-sw="Matokeo ya Ripoti">Report Results</h3>
             <div class="summary-stats text-end">
-                <p style="margin-bottom: 5px;"><strong data-en="Total Income:" data-sw="Jumla ya Mapato:">Total Income:</strong> 
-                    <span id="reportIncome" class="text-success fw-bold">KES 0</span></p>
-                <p style="margin-bottom: 5px;"><strong data-en="Total Expense:" data-sw="Jumla ya Matumizi:">Total Expense:</strong> 
-                    <span id="reportExpense" class="text-danger fw-bold">KES 0</span></p>
-                <p style="margin-bottom: 0;"><strong data-en="Net:" data-sw="Usawa:">Net:</strong> 
-                    <span id="reportNet" class="fw-bold">KES 0</span></p>
+                <p style="margin-bottom: 5px;"><strong data-en="Total Income:" data-sw="Jumla ya Mapato:">Total Income:</strong> <span id="reportIncome" class="text-success fw-bold">KES 0</span></p>
+                <p style="margin-bottom: 5px;"><strong data-en="Total Expense:" data-sw="Jumla ya Matumizi:">Total Expense:</strong> <span id="reportExpense" class="text-danger fw-bold">KES 0</span></p>
+                <p style="margin-bottom: 0;"><strong data-en="Net:" data-sw="Usawa:">Net:</strong> <span id="reportNet" class="fw-bold">KES 0</span></p>
             </div>
         </div>
         
@@ -99,8 +92,7 @@
                         <th data-en="Amount" data-sw="Kiasi">Amount</th>
                     </tr>
                 </thead>
-                <tbody id="reportTableBody">
-                </tbody>
+                <tbody id="reportTableBody"></tbody>
             </table>
         </div>
     </div>
@@ -114,6 +106,7 @@
         border: 1px solid #dee2e6 !important;
         vertical-align: middle;
         padding: 12px;
+        white-space: nowrap;
     }
 </style>
 {% endblock %}
@@ -130,6 +123,7 @@ function loadCategories() {
     fetch('/categories/api/list').then(res => res.json()).then(data => {
         if (data.success) {
             const select = document.getElementById('reportCategory');
+            while (select.options.length > 1) { select.remove(1); }
             data.categories.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat.id; opt.textContent = cat.name;
@@ -186,19 +180,15 @@ function displayReport(data) {
         options: { responsive: true, maintainAspectRatio: false }
     });
 
-    displayReportTable(data.transactions);
-}
-
-function displayReportTable(transactions) {
     const tbody = document.getElementById('reportTableBody');
     tbody.innerHTML = '';
     
-    transactions.forEach(t => {
+    data.transactions.forEach(t => {
         const typeClass = t.type === 'income' ? 'income-text' : 'expense-text';
-        // Note: Category data is ignored in the table view but still exists in the 't' object for export logic if needed.
+        // Category TD REMOVED from the table generation logic
         tbody.innerHTML += `
             <tr>
-                <td class="text-nowrap">${t.date}</td>
+                <td>${t.date}</td>
                 <td class="${typeClass} fw-bold">${t.type.toUpperCase()}</td>
                 <td>${t.description || '-'}</td>
                 <td>${t.payment_method || 'Cash'}</td>
@@ -214,12 +204,10 @@ function exportReport(format) {
         category: document.getElementById('reportCategory').value,
         format: format
     });
-    
     if (currentPeriod === 'custom') {
         params.append('from_date', document.getElementById('from_date').value);
         params.append('to_date', document.getElementById('to_date').value);
     }
-    
     window.location.href = `/reports/api/export?${params.toString()}`;
 }
 </script>
