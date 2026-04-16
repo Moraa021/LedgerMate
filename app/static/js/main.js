@@ -59,12 +59,12 @@ function showFlashMessage(message, category = 'info') {
     `;
     container.appendChild(flash);
     
-    // Auto remove after 5 seconds
+    // Auto remove after 3 seconds
     setTimeout(() => {
         if (flash.parentElement) {
             flash.remove();
         }
-    }, 5000);
+    }, 3000);
 }
 
 // Handle form validation

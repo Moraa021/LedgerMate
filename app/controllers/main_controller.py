@@ -244,3 +244,92 @@ def profile():
                            title='Profile', 
                            stats=stats, 
                            categories=categories)
+
+
+@bp.route('/setup_demo_data')
+def setup_demo_data():
+    from app.models import Category, Transaction
+    from app import db
+    import random
+    import uuid
+    from datetime import datetime, timedelta
+    from flask_login import current_user
+
+    if not current_user.is_authenticated:
+        return "Please log in first!"
+
+    try:
+        # 1. Clear existing data for this user to avoid duplicates
+        Transaction.query.filter_by(user_id=current_user.id).delete()
+        Category.query.filter_by(user_id=current_user.id).delete()
+
+        # 2. Create Categories
+        cat_configs = [
+            ('Product Sales', 'income'),
+            ('Service Income', 'income'),
+            ('Commission', 'income'),
+            ('Shop Rent', 'expense'),
+            ('Stock Purchase', 'expense'),
+            ('Electricity', 'expense'),
+            ('Water Bill', 'expense'),
+            ('Transport', 'expense'),
+            ('Internet', 'expense')
+        ]
+        
+        new_cats = []
+        for name, cat_type in cat_configs:
+            c = Category(
+                name=name, 
+                type=cat_type,
+                user_id=current_user.id,
+                is_system=False
+            )
+            db.session.add(c)
+            db.session.flush() 
+            new_cats.append(c)
+
+        # 3. Generate 30 Random Transactions
+        payment_methods = ["Cash", "M-Pesa", "M-Pesa"] # Weighted towards M-Pesa
+        income_descs = ["Client Payment", "Daily Sales", "Overtime Bonus", "Refund"]
+        expense_descs = ["Supplier Payment", "Lunch", "Fuel", "Utility Bill", "Stationery"]
+
+        for i in range(30):
+            # Select a random category
+            category = random.choice(new_cats)
+            t_type = category.type
+            
+            # Select description based on type
+            desc = random.choice(income_descs) if t_type == 'income' else random.choice(expense_descs)
+            
+            # Generate random amount
+            amount = random.randint(500, 5000) if t_type == 'expense' else random.randint(5000, 45000)
+            
+            # Payment Method & M-Pesa Code logic
+            method = random.choice(payment_methods)
+            additional_info = {}
+            if method == "M-Pesa":
+                # Generate a fake M-Pesa code (e.g., RDK45TY89)
+                fake_code = "".join(random.choices("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=10))
+                additional_info = {"mpesa_code": fake_code}
+
+            # Create the transaction
+            t = Transaction(
+                public_id=str(uuid.uuid4()),
+                user_id=current_user.id,
+                category_id=category.id,
+                type=t_type,
+                amount=amount,
+                description=f"{desc} {i+1}",
+                payment_method=method,
+                additional_info=additional_info,
+                # Spread dates over the last 30 days
+                transaction_date=datetime.utcnow() - timedelta(days=random.randint(0, 30), hours=random.randint(0, 23))
+            )
+            db.session.add(t)
+
+        db.session.commit()
+        return "Success! 30 demo transactions created. Check your dashboard for the new data!"
+        
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {str(e)}"

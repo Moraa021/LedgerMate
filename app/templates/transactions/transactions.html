@@ -3,61 +3,103 @@
 {% block title %}Transactions{% endblock %}
 
 {% block content %}
-<div class="transactions-page">
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1 data-en="Transactions" data-sw="Miamala">Transactions</h1>
-        <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary">
+<div class="transactions-page" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h1 style="font-weight: 700; color: #2d3748;" data-en="Transactions" data-sw="Miamala">Transactions</h1>
+        <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
             <i class="fas fa-plus"></i>
             <span data-en="Add" data-sw="Ongeza">Add</span>
         </a>
     </div>
     
-    <!-- Search and Filters -->
-    <div class="filters-card" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-        <div class="search-box" style="margin-bottom: 15px;">
-            <input type="text" 
-                   id="searchInput" 
-                   class="form-control" 
-                   placeholder="Search transactions..."
-                   data-en-placeholder="Search transactions..."
-                   data-sw-placeholder="Tafuta miamala...">
+    <div class="filters-card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 30px; border: 1px solid #e2e8f0;">
+        <div class="search-box" style="margin-bottom: 20px;">
+            <div style="position: relative;">
+                <i class="fas fa-search" style="position: absolute; left: 15px; top: 12px; color: #a0aec0;"></i>
+                <input type="text" 
+                       id="searchInput" 
+                       class="form-control" 
+                       style="padding-left: 45px; height: 45px; border-radius: 8px; border: 1px solid #e2e8f0;"
+                       placeholder="Search transactions..."
+                       data-en-placeholder="Search transactions..."
+                       data-sw-placeholder="Tafuta miamala...">
+            </div>
         </div>
         
-        <div class="filter-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
-            <select id="filterType" class="form-control">
+        <div class="filter-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px;">
+            <select id="filterType" class="form-control" style="height: 45px; border-radius: 8px; cursor: pointer;">
                 <option value="all" data-en="All Types" data-sw="Aina Zote">All Types</option>
-                <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
-                <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
+                <option value="income" data-en="Income" data-sw="Mapato">Income Only</option>
+                <option value="expense" data-en="Expense" data-sw="Matumizi">Expense Only</option>
             </select>
             
-            <select id="filterPayment" class="form-control">
+            <select id="filterPayment" class="form-control" style="height: 45px; border-radius: 8px; cursor: pointer;">
                 <option value="all" data-en="All Payments" data-sw="Malipo Yote">All Payments</option>
                 <option value="cash" data-en="Cash" data-sw="Taslimu">Cash</option>
                 <option value="mpesa" data-en="M-Pesa" data-sw="M-Pesa">M-Pesa</option>
-                <option value="other" data-en="Other" data-sw="Nyingine">Other</option>
             </select>
             
-            <input type="date" id="filterFrom" class="form-control" placeholder="From">
-            <input type="date" id="filterTo" class="form-control" placeholder="To">
+            <input type="date" id="filterFrom" class="form-control" style="height: 45px; border-radius: 8px;">
+            <input type="date" id="filterTo" class="form-control" style="height: 45px; border-radius: 8px;">
             
-            <button class="btn btn-primary" onclick="applyFilters()">
-                <i class="fas fa-filter"></i>
+            <button class="btn btn-primary" onclick="applyFilters()" style="height: 45px; border-radius: 8px; font-weight: 600;">
+                <i class="fas fa-filter" style="margin-right: 5px;"></i>
                 <span data-en="Filter" data-sw="Chuja">Filter</span>
             </button>
         </div>
     </div>
     
-    <!-- Transactions List -->
     <div class="transactions-list" id="transactionsList">
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p data-en="Loading transactions..." data-sw="Inapakia miamala...">Loading transactions...</p>
+        <div class="loading-spinner" style="text-align: center; padding: 50px;">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p style="margin-top: 15px; color: #718096;" data-en="Loading transactions..." data-sw="Inapakia miamala...">Loading transactions...</p>
         </div>
     </div>
     
-    <!-- Pagination -->
-    <div id="pagination" class="pagination-container"></div>
+    <div id="pagination" class="pagination-container" style="margin-top: 30px;"></div>
 </div>
+
+<style>
+    .transaction-item {
+        background: white;
+        margin-bottom: 12px;
+        padding: 16px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid #edf2f7;
+        cursor: pointer;
+    }
+    .transaction-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #cbd5e0;
+    }
+    .icon-box {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+    .income-bg { background: #e6fffa; color: #38b2ac; }
+    .expense-bg { background: #fff5f5; color: #f56565; }
+    .page-btn {
+        padding: 8px 16px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .page-btn.active {
+        background: #4299e1;
+        color: white;
+        border-color: #4299e1;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -68,7 +110,7 @@ let totalPages = 1;
 document.addEventListener('DOMContentLoaded', function() {
     loadTransactions();
     
-    // Setup search with debounce
+    // Search with debounce to prevent excessive server requests
     const searchInput = document.getElementById('searchInput');
     let searchTimeout;
     searchInput.addEventListener('input', function() {
@@ -91,7 +133,10 @@ function loadTransactions() {
     });
     
     fetch(`/transactions/api/list?${params.toString()}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Not Found');
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 displayTransactions(data.transactions);
@@ -101,7 +146,11 @@ function loadTransactions() {
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('transactionsList').innerHTML = '<p class="error">Error loading transactions</p>';
+            document.getElementById('transactionsList').innerHTML = 
+                `<div style="text-align:center; padding:40px; color:#f56565;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:32px;"></i>
+                    <p>Failed to load transactions. Please try again.</p>
+                </div>`;
         });
 }
 
@@ -111,50 +160,46 @@ function displayTransactions(transactions) {
     
     if (transactions.length === 0) {
         container.innerHTML = `
-            <div class="empty-state" style="text-align: center; padding: 40px;">
-                <i class="fas fa-receipt" style="font-size: 48px; color: var(--gray-color);"></i>
-                <h3 data-en="No Transactions Found" data-sw="Hakuna Miamala Iliyopatikana">No Transactions Found</h3>
-                <p data-en="Add your first transaction to get started" 
-                   data-sw="Ongeza muamala wako wa kwanza kuanza">
-                    Add your first transaction to get started
-                </p>
-                <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    <span data-en="Add Transaction" data-sw="Ongeza Muamala">Add Transaction</span>
-                </a>
-            </div>
-        `;
-        updateUIText(currentLang);
+            <div class="empty-state" style="text-align: center; padding: 60px; background: white; border-radius: 12px;">
+                <i class="fas fa-receipt" style="font-size: 50px; color: #cbd5e0; margin-bottom: 20px;"></i>
+                <h3 style="color: #4a5568;" data-en="No Transactions Found" data-sw="Hakuna Miamala">No Transactions Found</h3>
+                <p style="color: #718096;" data-en="Try adjusting your filters or add a new entry." data-sw="Jaribu kubadilisha vichujio au ongeza muamala.">Try adjusting your filters or add a new entry.</p>
+            </div>`;
         return;
     }
     
-    let html = '<ul class="transaction-list">';
-    
+    let html = '<div class="list-group">';
     transactions.forEach(t => {
-        const icon = t.type === 'income' ? '↑' : '↓';
-        const colorClass = t.type === 'income' ? 'income' : 'expense';
+        const isIncome = t.type === 'income';
+        const typeClass = isIncome ? 'income-bg' : 'expense-bg';
+        const icon = isIncome ? 'fa-arrow-up' : 'fa-arrow-down';
+        const amountPrefix = isIncome ? '+' : '-';
         
         html += `
-            <li class="transaction-item" onclick="showTransactionDetails('${t.id}')">
-                <div class="transaction-icon ${colorClass}">
-                    <i class="fas fa-${t.type === 'income' ? 'arrow-up' : 'arrow-down'}"></i>
+            <div class="transaction-item" onclick="window.location.href='/transactions/api/${t.id}'">
+                <div class="icon-box ${typeClass}">
+                    <i class="fas ${icon}"></i>
                 </div>
-                <div class="transaction-details">
-                    <div class="transaction-title">${t.description || t.category}</div>
-                    <div class="transaction-meta">
-                        <span>${t.category}</span> • <span>${t.payment_method}</span> • <span>${t.date}</span>
+                <div style="flex-grow: 1;">
+                    <div style="font-weight: 600; color: #2d3748; font-size: 1.05rem;">${t.description || t.category}</div>
+                    <div style="font-size: 0.85rem; color: #718096; margin-top: 2px;">
+                        <span style="background: #edf2f7; padding: 2px 8px; border-radius: 4px; margin-right: 5px;">${t.category}</span>
+                        <span>• ${t.payment_method}</span>
+                        <span>• ${t.date}</span>
                     </div>
                 </div>
-                <div class="transaction-amount ${colorClass}">
-                    ${icon} KES ${t.amount.toLocaleString()}
+                <div style="text-align: right;">
+                    <div style="font-weight: 700; font-size: 1.1rem;" class="${isIncome ? 'text-success' : 'text-danger'}">
+                        ${amountPrefix} KES ${parseFloat(t.amount).toLocaleString()}
+                    </div>
+                    ${t.mpesa_code ? `<div style="font-size: 0.75rem; color: #a0aec0;">Code: ${t.mpesa_code}</div>` : ''}
                 </div>
-            </li>
-        `;
+            </div>`;
     });
     
-    html += '</ul>';
-    container.innerHTML = html;
-    updateUIText(currentLang);
+    container.innerHTML = html + '</div>';
+    // If you have a translation helper, call it here
+    if (typeof updateUIText === 'function') updateUIText(currentLang);
 }
 
 function applyFilters() {
@@ -164,37 +209,19 @@ function applyFilters() {
 
 function setupPagination() {
     const container = document.getElementById('pagination');
-    let html = '<div class="pagination" style="display: flex; justify-content: center; gap: 5px; margin-top: 20px;">';
-    
-    // Previous button
-    html += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
-        <i class="fas fa-chevron-left"></i>
-    </button>`;
-    
-    // Page numbers
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+    let html = '<div style="display: flex; justify-content: center; gap: 8px;">';
     for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-            html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
-        } else if (i === currentPage - 3 || i === currentPage + 3) {
-            html += `<span class="page-dots">...</span>`;
-        }
+        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
     }
-    
-    // Next button
-    html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
-        <i class="fas fa-chevron-right"></i>
-    </button>`;
-    
-    html += '</div>';
-    container.innerHTML = html;
+    container.innerHTML = html + '</div>';
 }
 
 function changePage(page) {
-    if (page >= 1 && page <= totalPages) {
-        currentPage = page;
-        loadTransactions();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    currentPage = page;
+    loadTransactions();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
 {% endblock %}

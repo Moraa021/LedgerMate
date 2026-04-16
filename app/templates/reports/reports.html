@@ -3,174 +3,153 @@
 {% block title %}Reports{% endblock %}
 
 {% block content %}
-<div class="reports">
-    <h1 data-en="Financial Reports" data-sw="Ripoti za Kifedha">Financial Reports</h1>
+<div class="reports" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <h1 style="margin-bottom: 25px; font-weight: 700;" data-en="Financial Reports" data-sw="Ripoti za Kifedha">Financial Reports</h1>
     
-    <!-- Report Filters -->
-    <div class="card">
-        <h3 data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</h3>
+    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+        <h3 style="margin-bottom: 20px;" data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</h3>
         
         <div class="filter-section">
-            <!-- Report Type -->
-            <div class="form-group">
-                <label data-en="Report Period" data-sw="Kipindi cha Ripoti">Report Period</label>
-                <div class="period-selector">
-                    <button type="button" class="period-btn active" onclick="setPeriod('daily')" 
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;" data-en="Report Period" data-sw="Kipindi cha Ripoti">Report Period</label>
+                <div class="period-selector" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="period-btn btn btn-outline-primary active" onclick="setPeriod('daily', event)" 
                             data-en="Daily" data-sw="Kila Siku">Daily</button>
-                    <button type="button" class="period-btn" onclick="setPeriod('weekly')"
+                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('weekly', event)"
                             data-en="Weekly" data-sw="Kila Wiki">Weekly</button>
-                    <button type="button" class="period-btn" onclick="setPeriod('monthly')"
+                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('monthly', event)"
                             data-en="Monthly" data-sw="Kila Mwezi">Monthly</button>
-                    <button type="button" class="period-btn" onclick="setPeriod('custom')"
+                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('custom', event)"
                             data-en="Custom" data-sw="Maalum">Custom</button>
                 </div>
             </div>
             
-            <!-- Date Range (for custom period) -->
-            <div id="customDateRange" style="display: none;">
-                <div class="form-group">
-                    <label for="from_date" data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
-                    <input type="date" class="form-control" id="from_date" name="from_date">
-                </div>
-                <div class="form-group">
-                    <label for="to_date" data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
-                    <input type="date" class="form-control" id="to_date" name="to_date">
-                </div>
-            </div>
-            
-            <!-- Additional Filters -->
-            <div class="form-group">
-                <label data-en="Transaction Type" data-sw="Aina ya Muamala">Transaction Type</label>
-                <select class="form-control" id="reportType">
-                    <option value="all" data-en="All Transactions" data-sw="Miamala Yote">All Transactions</option>
-                    <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
-                    <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label data-en="Category" data-sw="Aina">Category</label>
-                <select class="form-control" id="reportCategory">
-                    <option value="all" data-en="All Categories" data-sw="Aina Zote">All Categories</option>
-                    <!-- Categories will be loaded dynamically -->
-                </select>
-            </div>
-            
-            <!-- Export Options -->
-            <div class="export-options">
-                <h4 data-en="Export Format" data-sw="Muundo wa Kuhamisha">Export Format</h4>
-                <div class="export-buttons">
-                    <button class="btn" onclick="exportReport('pdf')">
-                        <i class="fas fa-file-pdf"></i> PDF
-                    </button>
-                    <button class="btn" onclick="exportReport('csv')">
-                        <i class="fas fa-file-csv"></i> CSV
-                    </button>
-                    <button class="btn" onclick="exportReport('excel')">
-                        <i class="fas fa-file-excel"></i> Excel
-                    </button>
-                    
+            <div id="customDateRange" style="display: none; margin-bottom: 20px;">
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label for="from_date" data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
+                        <input type="date" class="form-control" id="from_date" name="from_date">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label for="to_date" data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
+                        <input type="date" class="form-control" id="to_date" name="to_date">
+                    </div>
                 </div>
             </div>
             
-            <!-- Generate Button -->
-            <button class="btn btn-primary btn-block" onclick="generateReport()">
+            <div class="row">
+                <div class="col-md-6 form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600;" data-en="Transaction Type" data-sw="Aina ya Muamala">Transaction Type</label>
+                    <select class="form-control" id="reportType">
+                        <option value="all" data-en="All Transactions" data-sw="Miamala Yote">All Transactions</option>
+                        <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
+                        <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6 form-group" style="margin-bottom: 20px;">
+                    <label style="font-weight: 600;" data-en="Category" data-sw="Aina">Category</label>
+                    <select class="form-control" id="reportCategory">
+                        <option value="all" data-en="All Categories" data-sw="Aina Zote">All Categories</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="export-options mb-3">
+                <label class="fw-bold d-block mb-2" data-en="Export Format" data-sw="Umbizo la Hamisha">Export Format</label>
+                <div class="btn-group w-100">
+                    <button class="btn btn-outline-secondary" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+                    <button class="btn btn-outline-secondary" onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> CSV</button>
+                    <button class="btn btn-outline-secondary" onclick="exportReport('excel')"><i class="fas fa-file-excel"></i> Excel</button>
+                </div>
+            </div>
+            
+            <button class="btn btn-primary btn-block w-100 py-2" id="generateBtn" onclick="generateReport()">
                 <i class="fas fa-chart-line"></i>
                 <span data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</span>
             </button>
         </div>
     </div>
     
-    <!-- Report Results -->
-    <div class="card" id="reportResults" style="display: none;">
-        <div class="report-header">
+    <div class="card" id="reportResults" style="display: none; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+        <div class="report-header d-flex justify-content-between align-items-start mb-4">
             <h3 data-en="Report Results" data-sw="Matokeo ya Ripoti">Report Results</h3>
-            <div class="summary-stats">
-                <p><strong data-en="Total Income:" data-sw="Jumla ya Mapato:">Total Income:</strong> 
-                    <span id="reportIncome">KES 0</span></p>
-                <p><strong data-en="Total Expense:" data-sw="Jumla ya Matumizi:">Total Expense:</strong> 
-                    <span id="reportExpense">KES 0</span></p>
-                <p><strong data-en="Net:" data-sw="Usawa:">Net:</strong> 
-                    <span id="reportNet">KES 0</span></p>
+            <div class="summary-stats text-end">
+                <p style="margin-bottom: 5px;"><strong data-en="Total Income:" data-sw="Jumla ya Mapato:">Total Income:</strong> 
+                    <span id="reportIncome" class="text-success fw-bold">KES 0</span></p>
+                <p style="margin-bottom: 5px;"><strong data-en="Total Expense:" data-sw="Jumla ya Matumizi:">Total Expense:</strong> 
+                    <span id="reportExpense" class="text-danger fw-bold">KES 0</span></p>
+                <p style="margin-bottom: 0;"><strong data-en="Net:" data-sw="Usawa:">Net:</strong> 
+                    <span id="reportNet" class="fw-bold">KES 0</span></p>
             </div>
         </div>
         
-        <!-- Report Chart -->
-        <div class="chart-container">
+        <div class="chart-container" style="position: relative; height: 300px; margin-bottom: 40px;">
             <canvas id="reportChart"></canvas>
         </div>
         
-        <!-- Report Table -->
-        <div class="table-responsive">
-            <table class="report-table">
-                <thead>
+        <div class="report-table-wrapper" style="border: 1px solid #dee2e6; border-radius: 8px; overflow-x: auto;">
+            <table class="table table-bordered table-hover mb-0" id="mainReportTable">
+                <thead class="table-light">
                     <tr>
                         <th data-en="Date" data-sw="Tarehe">Date</th>
                         <th data-en="Type" data-sw="Aina">Type</th>
-                        <th data-en="Category" data-sw="Aina">Category</th>
                         <th data-en="Description" data-sw="Maelezo">Description</th>
                         <th data-en="Payment" data-sw="Malipo">Payment</th>
                         <th data-en="Amount" data-sw="Kiasi">Amount</th>
                     </tr>
                 </thead>
                 <tbody id="reportTableBody">
-                    <!-- Transactions will be loaded here -->
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
+<style>
+    .period-btn.active { background-color: #0d6efd !important; color: white !important; }
+    .income-text { color: #198754; font-weight: 600; }
+    .expense-text { color: #dc3545; font-weight: 600; }
+    .table-bordered th, .table-bordered td {
+        border: 1px solid #dee2e6 !important;
+        vertical-align: middle;
+        padding: 12px;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let currentPeriod = 'daily';
 let reportChart = null;
 
-// Load categories on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadCategories();
-});
+document.addEventListener('DOMContentLoaded', loadCategories);
 
 function loadCategories() {
-    fetch('/categories/api/list')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const select = document.getElementById('reportCategory');
-                data.categories.forEach(cat => {
-                    const option = document.createElement('option');
-                    option.value = cat.id;
-                    option.textContent = cat.name;
-                    select.appendChild(option);
-                });
-            }
-        });
+    fetch('/categories/api/list').then(res => res.json()).then(data => {
+        if (data.success) {
+            const select = document.getElementById('reportCategory');
+            data.categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id; opt.textContent = cat.name;
+                select.appendChild(opt);
+            });
+        }
+    });
 }
 
-function setPeriod(period) {
+function setPeriod(period, event) {
     currentPeriod = period;
-    
-    // Update button styles
-    document.querySelectorAll('.period-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
+    document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
-    
-    // Show/hide custom date range
-    const customRange = document.getElementById('customDateRange');
-    if (period === 'custom') {
-        customRange.style.display = 'block';
-    } else {
-        customRange.style.display = 'none';
-    }
+    document.getElementById('customDateRange').style.display = (period === 'custom') ? 'block' : 'none';
 }
 
 function generateReport() {
-    // Show loading
-    showLoading();
-    
-    // Build query parameters
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true; btn.innerHTML = 'Generating...';
+
     const params = new URLSearchParams({
         period: currentPeriod,
         type: document.getElementById('reportType').value,
@@ -182,144 +161,53 @@ function generateReport() {
         params.append('to_date', document.getElementById('to_date').value);
     }
     
-    // Fetch report data
     fetch(`/reports/api/generate?${params.toString()}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displayReport(data);
-            } else {
-                showFlashMessage('Error generating report', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showFlashMessage('Error generating report', 'error');
-        })
-        .finally(() => {
-            hideLoading();
-        });
+        .then(res => res.json())
+        .then(data => { if (data.success) displayReport(data); })
+        .finally(() => { btn.disabled = false; btn.innerHTML = 'Generate Report'; });
 }
 
 function displayReport(data) {
-    // Show results section
     document.getElementById('reportResults').style.display = 'block';
+    document.getElementById('reportIncome').textContent = `KES ${data.summary.income.toLocaleString()}`;
+    document.getElementById('reportExpense').textContent = `KES ${data.summary.expense.toLocaleString()}`;
+    document.getElementById('reportNet').textContent = `KES ${data.summary.net.toLocaleString()}`;
     
-    // Update summary stats
-    document.getElementById('reportIncome').textContent = 
-        `KES ${data.summary.income.toLocaleString()}`;
-    document.getElementById('reportExpense').textContent = 
-        `KES ${data.summary.expense.toLocaleString()}`;
-    document.getElementById('reportNet').textContent = 
-        `KES ${data.summary.net.toLocaleString()}`;
-    
-    // Update chart
-    createReportChart(data.chart_data);
-    
-    // Update table
-    displayReportTable(data.transactions);
-}
-
-function createReportChart(chartData) {
-    const ctx = document.getElementById('reportChart').getContext('2d');
-    
-    // Destroy existing chart if it exists
-    if (reportChart) {
-        reportChart.destroy();
-    }
-    
-    reportChart = new Chart(ctx, {
+    if (reportChart) reportChart.destroy();
+    reportChart = new Chart(document.getElementById('reportChart'), {
         type: 'bar',
         data: {
-            labels: chartData.labels,
+            labels: data.chart_data.labels,
             datasets: [
-                {
-                    label: 'Income',
-                    data: chartData.income,
-                    backgroundColor: '#2ecc71',
-                    borderColor: '#27ae60',
-                    borderWidth: 1
-                },
-                {
-                    label: 'Expense',
-                    data: chartData.expense,
-                    backgroundColor: '#e74c3c',
-                    borderColor: '#c0392b',
-                    borderWidth: 1
-                }
+                { label: 'Income', data: data.chart_data.income, backgroundColor: '#198754' },
+                { label: 'Expense', data: data.chart_data.expense, backgroundColor: '#dc3545' }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'KES ' + value.toLocaleString();
-                        }
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            label += 'KES ' + context.raw.toLocaleString();
-                            return label;
-                        }
-                    }
-                }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false }
     });
+
+    displayReportTable(data.transactions);
 }
 
 function displayReportTable(transactions) {
     const tbody = document.getElementById('reportTableBody');
-    const currentLang = document.documentElement.lang || 'en';
+    tbody.innerHTML = '';
     
-    if (transactions.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center">
-                    <p data-en="No transactions found" data-sw="Hakuna miamala iliyopatikana">
-                        No transactions found
-                    </p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-    
-    let html = '';
     transactions.forEach(t => {
         const typeClass = t.type === 'income' ? 'income-text' : 'expense-text';
-        const typeIcon = t.type === 'income' ? '↑' : '↓';
-        
-        html += `
+        // Note: Category data is ignored in the table view but still exists in the 't' object for export logic if needed.
+        tbody.innerHTML += `
             <tr>
-                <td>${t.date}</td>
-                <td class="${typeClass}">${typeIcon} ${t.type}</td>
-                <td>${t.category}</td>
+                <td class="text-nowrap">${t.date}</td>
+                <td class="${typeClass} fw-bold">${t.type.toUpperCase()}</td>
                 <td>${t.description || '-'}</td>
-                <td>${t.payment_method}</td>
-                <td class="${typeClass}">KES ${t.amount.toLocaleString()}</td>
-            </tr>
-        `;
+                <td>${t.payment_method || 'Cash'}</td>
+                <td class="${typeClass} text-end">KES ${t.amount.toLocaleString()}</td>
+            </tr>`;
     });
-    
-    tbody.innerHTML = html;
-    updateUIText(currentLang);
 }
 
 function exportReport(format) {
-    // Build query parameters
     const params = new URLSearchParams({
         period: currentPeriod,
         type: document.getElementById('reportType').value,
@@ -332,21 +220,7 @@ function exportReport(format) {
         params.append('to_date', document.getElementById('to_date').value);
     }
     
-    // Redirect to export endpoint
     window.location.href = `/reports/api/export?${params.toString()}`;
-}
-
-function showLoading() {
-    // Show loading indicator
-    const btn = document.querySelector('.btn-primary');
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-    btn.disabled = true;
-}
-
-function hideLoading() {
-    const btn = document.querySelector('.btn-primary');
-    btn.innerHTML = '<i class="fas fa-chart-line"></i> Generate Report';
-    btn.disabled = false;
 }
 </script>
 {% endblock %}

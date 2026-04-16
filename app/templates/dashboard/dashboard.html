@@ -86,33 +86,43 @@
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
 // Load dashboard data
+// Missing Helper Function
+function updateUIText(lang) {
+    document.querySelectorAll('[data-' + lang + ']').forEach(el => {
+        el.textContent = el.getAttribute('data-' + lang);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadDashboardData();
 });
 
 function loadDashboardData() {
+    // Ensure this path matches your @main.route exactly
     fetch('/api/dashboard/stats')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.json();
+        })
         .then(data => {
-            if (data.success) {
-                // Update summary cards
-                document.getElementById('totalIncome').textContent = 
-                    `KES ${data.income_total.toLocaleString()}`;
-                document.getElementById('totalExpense').textContent = 
-                    `KES ${data.expense_total.toLocaleString()}`;
-                document.getElementById('netBalance').textContent = 
-                    `KES ${data.net_total.toLocaleString()}`;
-                
-                // Update chart
-                createIncomeExpenseChart(data.chart_data);
-                
-                // Update recent transactions
-                displayRecentTransactions(data.recent_transactions);
-            }
+            // Updated to handle both "data.success" or just raw data
+            const income = data.income_total || 0;
+            const expense = data.expense_total || 0;
+            const net = data.net_total || (income - expense);
+
+            document.getElementById('totalIncome').textContent = `KES ${income.toLocaleString()}`;
+            document.getElementById('totalExpense').textContent = `KES ${expense.toLocaleString()}`;
+            document.getElementById('netBalance').textContent = `KES ${net.toLocaleString()}`;
+            
+            if (data.chart_data) createIncomeExpenseChart(data.chart_data);
+            if (data.recent_transactions) displayRecentTransactions(data.recent_transactions);
         })
         .catch(error => {
             console.error('Error loading dashboard:', error);
-            showFlashMessage('Error loading dashboard data', 'error');
+            // Using LedgerMate's showFlashMessage from main.js
+            if (window.LedgerMate) {
+                window.LedgerMate.showFlashMessage('Error loading dashboard data', 'error');
+            }
         });
 }
 
@@ -120,15 +130,12 @@ function displayRecentTransactions(transactions) {
     const container = document.getElementById('recentTransactions');
     const currentLang = document.documentElement.lang || 'en';
     
-    if (transactions.length === 0) {
+    if (!transactions || transactions.length === 0) {
         container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-receipt" style="font-size: 48px; color: var(--gray-color);"></i>
+            <div class="empty-state" style="text-align:center; padding: 20px;">
+                <i class="fas fa-receipt" style="font-size: 48px; color: #ccc;"></i>
                 <p data-en="No transactions yet" data-sw="Hakuna miamala bado">No transactions yet</p>
-                <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary"
-                   data-en="Add Your First Transaction" data-sw="Ongeza Muamala wa Kwanza">
-                    Add Your First Transaction
-                </a>
+                <a href="/transactions/add" class="btn btn-primary">Add Your First Transaction</a>
             </div>
         `;
         updateUIText(currentLang);
@@ -136,33 +143,27 @@ function displayRecentTransactions(transactions) {
     }
     
     let html = '<ul class="transaction-list">';
-    
     transactions.forEach(t => {
-        const icon = t.type === 'income' ? '↑' : '↓';
-        const colorClass = t.type === 'income' ? 'income' : 'expense';
+        const colorClass = t.type.toLowerCase() === 'income' ? 'income' : 'expense';
+        const symbol = t.type.toLowerCase() === 'income' ? '+' : '-';
         
         html += `
-            <li class="transaction-item" onclick="showTransactionDetails('${t.id}')">
-                <div class="transaction-icon ${colorClass}">
-                    <i class="fas fa-${t.type === 'income' ? 'arrow-up' : 'arrow-down'}"></i>
+            <li class="transaction-item" onclick="showTransactionDetails('${t.id}')" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
+                <div>
+                    <div class="transaction-title"><strong>${t.description || t.category}</strong></div>
+                    <div class="transaction-meta" style="font-size:0.8em; color:#666;">${t.category} • ${t.payment_method}</div>
                 </div>
-                <div class="transaction-details">
-                    <div class="transaction-title">${t.description || t.category}</div>
-                    <div class="transaction-meta">
-                        <span>${t.category}</span> • <span>${t.payment_method}</span>
-                    </div>
+                <div class="transaction-amount ${colorClass}" style="color: ${colorClass === 'income' ? 'green' : 'red'}">
+                    ${symbol} KES ${t.amount.toLocaleString()}
                 </div>
-                <div class="transaction-amount ${colorClass}">
-                    ${icon} KES ${t.amount.toLocaleString()}
-                </div>
-            </li>
-        `;
+            </li>`;
     });
-    
     html += '</ul>';
     container.innerHTML = html;
     updateUIText(currentLang);
 }
+
+// ... keep your showTransactionDetails and closeModal functions as they were
 
 function showTransactionDetails(transactionId) {
     fetch(`/transactions/api/${transactionId}`)
