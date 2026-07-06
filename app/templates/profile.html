@@ -40,7 +40,7 @@
                 <div class="h4 mb-0 font-weight-bold">{{ categories|length }}</div>
             </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-6 col-md-4">
             <div class="card h-100 border-0 shadow-sm text-center p-3">
                 <i class="fas fa-wallet text-info mb-2" style="font-size: 1.5rem;"></i>
                 <div class="small text-muted">Net Balance</div>
@@ -48,6 +48,15 @@
                     {{ "{:,.0f}".format(stats.net_total) }} KES
                 </div>
             </div>
+        </div>
+        <div class="col-6 col-md-4">
+            <a href="{{ url_for('inventory.inventory_page') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm text-center p-3">
+                    <i class="fas fa-boxes text-warning mb-2" style="font-size: 1.5rem;"></i>
+                    <div class="small text-muted">Inventory</div>
+                    <div class="h4 mb-0 font-weight-bold text-dark">Manage</div>
+                </div>
+            </a>
         </div>
     </div>
 
