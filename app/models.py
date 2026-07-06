@@ -112,7 +112,21 @@ class Transaction(db.Model):
     # Foreign keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
-    
+
+    # Optional link to an inventory item, set automatically when a transaction
+    # is generated from a stock sale/purchase (see InventoryService)
+    inventory_item_id = db.Column(db.Integer, db.ForeignKey('inventory_items.id'), nullable=True)
+
+    # Marks whether this transaction represents Cost of Goods Sold, so the
+    # P&L service can separate it from ordinary operating expenses
+    is_cogs = db.Column(db.Boolean, default=False)
+
+    # Marks an inventory purchase (buying stock). This is real cash leaving
+    # the business (counted in the Balance Sheet's cash position) but is NOT
+    # an operating expense in the P&L - it converts cash into an inventory
+    # asset. Its cost only hits the P&L later, as COGS, when the stock sells.
+    is_inventory_purchase = db.Column(db.Boolean, default=False)
+
     def to_dict(self):
         return {
             'id': self.public_id,
@@ -123,11 +137,131 @@ class Transaction(db.Model):
             'mpesa_code': self.mpesa_code,
             'category_id': self.category_id,
             'transaction_date': self.transaction_date.isoformat() if self.transaction_date else None,
-            'additional_info': self.additional_info
+            'additional_info': self.additional_info,
+            'is_cogs': self.is_cogs
         }
     
     def __repr__(self):
         return f'<Transaction {self.type} {self.amount}>'
+
+
+class InventoryItem(db.Model):
+    """Stock keeping unit tracked for inventory management"""
+    __tablename__ = 'inventory_items'
+
+    id = db.Column(db.Integer, primary_key=True)
+    public_id = db.Column(db.String(50), unique=True, default=lambda: str(uuid.uuid4()))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    name = db.Column(db.String(150), nullable=False)
+    sku = db.Column(db.String(50))
+    unit = db.Column(db.String(20), default='pcs')  # pcs, kg, litre, etc.
+
+    # Weighted-average cost per unit (updated on every purchase)
+    unit_cost = db.Column(db.Numeric(10, 2), default=0)
+    selling_price = db.Column(db.Numeric(10, 2), default=0)
+
+    quantity_on_hand = db.Column(db.Numeric(12, 2), default=0)
+    reorder_level = db.Column(db.Numeric(12, 2), default=0)
+
+    is_active = db.Column(db.Boolean, default=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    movements = db.relationship('StockMovement', backref='item', lazy='dynamic',
+                                 cascade='all, delete-orphan')
+
+    __table_args__ = (
+        db.UniqueConstraint('sku', 'user_id', name='unique_sku_per_user'),
+    )
+
+    @property
+    def stock_value(self):
+        return float(self.quantity_on_hand or 0) * float(self.unit_cost or 0)
+
+    @property
+    def is_low_stock(self):
+        return float(self.quantity_on_hand or 0) <= float(self.reorder_level or 0)
+
+    def to_dict(self):
+        return {
+            'id': self.public_id,
+            'name': self.name,
+            'sku': self.sku,
+            'unit': self.unit,
+            'unit_cost': float(self.unit_cost or 0),
+            'selling_price': float(self.selling_price or 0),
+            'quantity_on_hand': float(self.quantity_on_hand or 0),
+            'reorder_level': float(self.reorder_level or 0),
+            'stock_value': self.stock_value,
+            'is_low_stock': self.is_low_stock,
+            'is_active': self.is_active
+        }
+
+    def __repr__(self):
+        return f'<InventoryItem {self.name} qty={self.quantity_on_hand}>'
+
+
+class StockMovement(db.Model):
+    """Audit trail of every stock in/out event"""
+    __tablename__ = 'stock_movements'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('inventory_items.id'), nullable=False)
+
+    movement_type = db.Column(db.String(20), nullable=False)  # 'purchase', 'sale', 'adjustment'
+    quantity = db.Column(db.Numeric(12, 2), nullable=False)  # always positive
+    unit_cost = db.Column(db.Numeric(10, 2), nullable=False)  # cost per unit at time of movement
+
+    # Linked ledger entry created for this movement (income for sale, expense for purchase)
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
+
+    notes = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<StockMovement {self.movement_type} {self.quantity}>'
+
+
+class MpesaTransaction(db.Model):
+    """Staging table for Daraja (M-Pesa) payment events, before/while they are
+    reconciled into a ledger Transaction."""
+    __tablename__ = 'mpesa_transactions'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Nullable because C2B payments may arrive before we know which user they
+    # belong to (matched via account reference / phone number)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+
+    # 'stk_push' (app-initiated) or 'c2b' (customer paid the till/paybill directly)
+    source = db.Column(db.String(20), nullable=False)
+
+    merchant_request_id = db.Column(db.String(100))
+    checkout_request_id = db.Column(db.String(100), index=True)
+
+    phone_number = db.Column(db.String(20))
+    amount = db.Column(db.Numeric(10, 2))
+
+    mpesa_receipt = db.Column(db.String(50), unique=True)
+
+    status = db.Column(db.String(20), default='pending')  # pending, success, failed
+    result_code = db.Column(db.String(10))
+    result_desc = db.Column(db.String(255))
+
+    raw_callback = db.Column(db.JSON)
+
+    # Set once we've posted this to the ledger, to guarantee idempotency
+    transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<MpesaTransaction {self.source} {self.status} {self.amount}>'
 
 class SyncQueue(db.Model):
     """Offline sync queue"""
