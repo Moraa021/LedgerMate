@@ -1,139 +1,127 @@
 """
-Simple, dependable forecasting for a small business ledger.
+Lightweight AI forecasting for LedgerMate.
 
-Rather than a black-box model, this uses linear regression over daily
-aggregated income/expense totals (scikit-learn, already a dependency) plus a
-naive 7-day moving average as a sanity baseline. This is intentionally
-simple: with the transaction volumes a micro-business logs (tens/hundreds of
-entries a month), a simple trend line generalizes far better than a complex
-model, and it's easy to explain to a non-technical user ("based on your
-recent trend, you're on track for roughly X next month").
-
-If/when there's enough history (12+ months), swap in `statsmodels` ARIMA or
-Prophet for seasonality-aware forecasts — the interface below
-(`forecast_series`) is written so that swap only touches this file.
+Uses a simple linear regression (numpy polyfit, degree 1) over monthly
+income/expense totals to project the next few months. This is intentionally
+simple and explainable rather than a black box - MSE owners need to trust
+and understand a forecast, not just see a number.
 """
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 import numpy as np
-from sqlalchemy import func
+from sqlalchemy import func, extract
 from app.models import Transaction
+from app.extensions import db
 
 
 class ForecastService:
 
-    def _daily_totals(self, user_id, metric, lookback_days=90):
-        """Returns (dates: list[date], values: list[float]) for the given
-        metric ('income', 'expense', or 'net'), filling gaps with 0."""
-        end_date = datetime.utcnow().date()
-        start_date = end_date - timedelta(days=lookback_days)
+    def _monthly_totals(self, user_id, months_back=12):
+        """Returns list of dicts: [{year, month, income, expense}] oldest -> newest."""
+        today = datetime.utcnow()
+        start = (today.replace(day=1) - relativedelta(months=months_back - 1))
 
-        rows = Transaction.query.with_entities(
-            func.date(Transaction.transaction_date).label('date'),
+        rows = db.session.query(
+            extract('year', Transaction.transaction_date).label('year'),
+            extract('month', Transaction.transaction_date).label('month'),
             Transaction.type,
             func.sum(Transaction.amount).label('total')
         ).filter(
             Transaction.user_id == user_id,
             Transaction.is_deleted == False,
-            func.date(Transaction.transaction_date) >= start_date,
-            func.date(Transaction.transaction_date) <= end_date,
-        ).group_by(func.date(Transaction.transaction_date), Transaction.type).all()
+            Transaction.transaction_date >= start
+        ).group_by('year', 'month', Transaction.type).all()
 
-        by_date = {}
-        for row in rows:
-            d = row.date if not isinstance(row.date, str) else datetime.strptime(row.date, '%Y-%m-%d').date()
-            by_date.setdefault(d, {'income': 0.0, 'expense': 0.0})
-            by_date[d][row.type] = float(row.total or 0)
+        buckets = {}
+        cursor = start
+        for _ in range(months_back):
+            key = (cursor.year, cursor.month)
+            buckets[key] = {'year': cursor.year, 'month': cursor.month, 'income': 0.0, 'expense': 0.0}
+            cursor += relativedelta(months=1)
 
-        dates, values = [], []
-        current = start_date
-        while current <= end_date:
-            day = by_date.get(current, {'income': 0.0, 'expense': 0.0})
-            if metric == 'net':
-                val = day['income'] - day['expense']
+        for r in rows:
+            key = (int(r.year), int(r.month))
+            if key in buckets:
+                buckets[key][r.type] = float(r.total or 0)
+
+        return [buckets[k] for k in sorted(buckets.keys())]
+
+    def _linear_forecast(self, series, periods_ahead):
+        """Fit y = a*x + b over the series and project forward. Never predicts below 0."""
+        n = len(series)
+        if n < 2 or all(v == 0 for v in series):
+            avg = sum(series) / n if n else 0
+            return [max(avg, 0) for _ in range(periods_ahead)]
+
+        x = np.arange(n)
+        y = np.array(series, dtype=float)
+        slope, intercept = np.polyfit(x, y, 1)
+
+        forecasts = []
+        for i in range(periods_ahead):
+            projected = slope * (n + i) + intercept
+            forecasts.append(round(max(projected, 0), 2))
+        return forecasts
+
+    def generate_forecast(self, user_id, months_ahead=3, history_months=12):
+        history = self._monthly_totals(user_id, months_back=history_months)
+        income_series = [h['income'] for h in history]
+        expense_series = [h['expense'] for h in history]
+
+        income_forecast = self._linear_forecast(income_series, months_ahead)
+        expense_forecast = self._linear_forecast(expense_series, months_ahead)
+
+        # Build forward-looking month labels
+        last = datetime.utcnow().replace(day=1)
+        future_labels = []
+        for i in range(1, months_ahead + 1):
+            m = last + relativedelta(months=i)
+            future_labels.append(m.strftime('%b %Y'))
+
+        history_labels = [f"{datetime(h['year'], h['month'], 1):%b %Y}" for h in history]
+
+        # Simple trend classification based on regression slope of net (income - expense)
+        net_series = [i - e for i, e in zip(income_series, expense_series)]
+        trend = 'stable'
+        if len(net_series) >= 3:
+            x = np.arange(len(net_series))
+            slope, _ = np.polyfit(x, np.array(net_series, dtype=float), 1)
+            if slope > max(abs(np.mean(net_series)), 1) * 0.05:
+                trend = 'improving'
+            elif slope < -max(abs(np.mean(net_series)), 1) * 0.05:
+                trend = 'declining'
+
+        insights = []
+        if income_forecast and expense_forecast:
+            projected_net = sum(income_forecast) - sum(expense_forecast)
+            if projected_net < 0:
+                insights.append(
+                    f"Projected expenses may outpace income over the next {months_ahead} month(s) "
+                    f"by roughly KES {abs(projected_net):,.0f} - worth reviewing costs."
+                )
             else:
-                val = day.get(metric, 0.0)
-            dates.append(current)
-            values.append(val)
-            current += timedelta(days=1)
-
-        return dates, values
-
-    def forecast_series(self, values, horizon):
-        """Linear regression trend forecast, with a moving-average baseline
-        for comparison. Returns forecasted daily values for `horizon` days
-        ahead."""
-        n = len(values)
-        if n < 7:
-            # Not enough history — flat forecast using the available average
-            avg = float(np.mean(values)) if values else 0.0
-            return [avg] * horizon, 'insufficient_history'
-
-        try:
-            from sklearn.linear_model import LinearRegression
-            X = np.arange(n).reshape(-1, 1)
-            y = np.array(values)
-            model = LinearRegression()
-            model.fit(X, y)
-
-            future_X = np.arange(n, n + horizon).reshape(-1, 1)
-            preds = model.predict(future_X)
-            preds = np.maximum(preds, 0)  # no negative income/expense forecasts
-            return preds.tolist(), 'linear_trend'
-        except Exception:
-            # Fallback: flat 7-day moving average
-            window = values[-7:]
-            avg = float(np.mean(window)) if window else 0.0
-            return [avg] * horizon, 'moving_average_fallback'
-
-    def forecast(self, user_id, metric='net', horizon_days=30, lookback_days=90):
-        dates, values = self._daily_totals(user_id, metric, lookback_days)
-        forecasted, method = self.forecast_series(values, horizon_days)
-
-        last_date = dates[-1] if dates else datetime.utcnow().date()
-        forecast_dates = [
-            (last_date + timedelta(days=i + 1)).strftime('%Y-%m-%d')
-            for i in range(horizon_days)
-        ]
-
-        # 7-day moving average trendline for the historical part, useful for charting
-        history_ma = []
-        for i in range(len(values)):
-            window = values[max(0, i - 6):i + 1]
-            history_ma.append(round(float(np.mean(window)), 2))
-
-        recent_avg = float(np.mean(values[-30:])) if len(values) >= 1 else 0.0
-        forecast_avg = float(np.mean(forecasted)) if forecasted else 0.0
-        if recent_avg > 0:
-            trend_pct = ((forecast_avg - recent_avg) / recent_avg) * 100
-        else:
-            trend_pct = 0.0
+                insights.append(
+                    f"Business is projected to net roughly KES {projected_net:,.0f} over the next {months_ahead} month(s)."
+                )
+        if trend == 'declining':
+            insights.append("Your net income trend over recent months is trending downward.")
+        elif trend == 'improving':
+            insights.append("Your net income trend over recent months is trending upward.")
 
         return {
-            'metric': metric,
-            'method': method,
             'history': {
-                'dates': [d.strftime('%Y-%m-%d') for d in dates],
-                'values': [round(v, 2) for v in values],
-                'moving_average': history_ma,
+                'labels': history_labels,
+                'income': income_series,
+                'expense': expense_series
             },
             'forecast': {
-                'dates': forecast_dates,
-                'values': [round(v, 2) for v in forecasted],
-                'total_projected': round(sum(forecasted), 2),
+                'labels': future_labels,
+                'income': income_forecast,
+                'expense': expense_forecast
             },
-            'trend': {
-                'direction': 'up' if trend_pct > 5 else 'down' if trend_pct < -5 else 'stable',
-                'change_pct': round(trend_pct, 1),
-            },
-        }
-
-    def cash_flow_forecast(self, user_id, horizon_days=30, lookback_days=90):
-        """Convenience: income, expense, and net forecasts together, useful
-        for a single dashboard/report view."""
-        return {
-            'income': self.forecast(user_id, 'income', horizon_days, lookback_days),
-            'expense': self.forecast(user_id, 'expense', horizon_days, lookback_days),
-            'net': self.forecast(user_id, 'net', horizon_days, lookback_days),
+            'trend': trend,
+            'insights': insights,
+            'method': 'Linear regression over monthly totals (simple trend projection, not a guarantee).'
         }
 
 

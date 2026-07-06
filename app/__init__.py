@@ -33,15 +33,15 @@ def create_app(config_name='default'):
     # Register blueprints
     from app.controllers import auth_controller, transaction_controller, \
         report_controller, category_controller, main_controller, \
-        inventory_controller, mpesa_controller
+        payment_controller, inventory_controller
     
     app.register_blueprint(auth_controller.bp)
     app.register_blueprint(transaction_controller.bp)
     app.register_blueprint(report_controller.bp)
     app.register_blueprint(category_controller.bp)
     app.register_blueprint(main_controller.bp)
+    app.register_blueprint(payment_controller.bp)
     app.register_blueprint(inventory_controller.bp)
-    app.register_blueprint(mpesa_controller.bp)
    
     
     # Create database tables

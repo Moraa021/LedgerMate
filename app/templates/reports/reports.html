@@ -3,87 +3,110 @@
 {% block title %}Reports{% endblock %}
 
 {% block content %}
-<div class="reports" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-    <h1 style="margin-bottom: 25px; font-weight: 700;" data-en="Financial Reports" data-sw="Ripoti za Kifedha">Financial Reports</h1>
-    
-    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-bottom: 30px;">
-        <h3 style="margin-bottom: 20px;" data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</h3>
-        
-        <div class="filter-section">
-            <div class="form-group" style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600;" data-en="Report Period" data-sw="Kipindi cha Ripoti">Report Period</label>
-                <div class="period-selector" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" class="period-btn btn btn-outline-primary active" onclick="setPeriod('daily', event)" data-en="Daily" data-sw="Kila Siku">Daily</button>
-                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('weekly', event)" data-en="Weekly" data-sw="Kila Wiki">Weekly</button>
-                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('monthly', event)" data-en="Monthly" data-sw="Kila Mwezi">Monthly</button>
-                    <button type="button" class="period-btn btn btn-outline-primary" onclick="setPeriod('custom', event)" data-en="Custom" data-sw="Maalum">Custom</button>
-                </div>
-            </div>
-            
-            <div id="customDateRange" style="display: none; margin-bottom: 20px;">
-                <div class="row">
-                    <div class="col-md-6 form-group">
-                        <label for="from_date" data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
-                        <input type="date" class="form-control" id="from_date">
-                    </div>
-                    <div class="col-md-6 form-group">
-                        <label for="to_date" data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
-                        <input type="date" class="form-control" id="to_date">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 form-group" style="margin-bottom: 20px;">
-                    <label style="font-weight: 600;" data-en="Transaction Type" data-sw="Aina ya Muamala">Transaction Type</label>
-                    <select class="form-control" id="reportType">
-                        <option value="all" data-en="All Transactions" data-sw="Miamala Yote">All Transactions</option>
-                        <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
-                        <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-6 form-group" style="margin-bottom: 20px;">
-                    <label style="font-weight: 600;" data-en="Category" data-sw="Aina">Category Filter (For Export)</label>
-                    <select class="form-control" id="reportCategory">
-                        <option value="all" data-en="All Categories" data-sw="Aina Zote">All Categories</option>
-                    </select>
-                </div>
-            </div>
+<div class="page-header mb-2">
+    <h1 data-en="Financial Reports" data-sw="Ripoti za Kifedha">Financial Reports</h1>
+</div>
 
-            <div class="export-options mb-3">
-                <label class="fw-bold d-block mb-2">Export Report</label>
-                <div class="btn-group w-100">
-                    <button class="btn btn-outline-secondary" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
-                    <button class="btn btn-outline-secondary" onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> CSV</button>
-                    <button class="btn btn-outline-secondary" onclick="exportReport('excel')"><i class="fas fa-file-excel"></i> Excel</button>
+<!-- Tab Bar -->
+<div class="report-tabs">
+    <button class="report-tab active" data-tab="summary" onclick="switchTab('summary')">
+        <i class="fas fa-chart-bar"></i><span data-en="Summary" data-sw="Muhtasari">Summary</span>
+    </button>
+    <button class="report-tab" data-tab="pnl" onclick="switchTab('pnl')">
+        <i class="fas fa-file-invoice-dollar"></i><span data-en="Profit &amp; Loss" data-sw="Faida na Hasara">Profit &amp; Loss</span>
+    </button>
+    <button class="report-tab" data-tab="balance" onclick="switchTab('balance')">
+        <i class="fas fa-balance-scale"></i><span data-en="Balance Sheet" data-sw="Mizania">Balance Sheet</span>
+    </button>
+    <button class="report-tab" data-tab="forecast" onclick="switchTab('forecast')">
+        <i class="fas fa-brain"></i><span data-en="AI Forecast" data-sw="Utabiri wa AI">AI Forecast</span>
+    </button>
+</div>
+
+<!-- ============ SUMMARY TAB ============ -->
+<div class="report-panel active" id="tab-summary">
+    <div class="card">
+        <h3 class="mb-2" data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</h3>
+
+        <div class="form-group">
+            <label data-en="Report Period" data-sw="Kipindi cha Ripoti">Report Period</label>
+            <div class="chip-row">
+                <button type="button" class="period-btn active" onclick="setPeriod('daily', event)" data-en="Daily" data-sw="Kila Siku">Daily</button>
+                <button type="button" class="period-btn" onclick="setPeriod('weekly', event)" data-en="Weekly" data-sw="Kila Wiki">Weekly</button>
+                <button type="button" class="period-btn" onclick="setPeriod('monthly', event)" data-en="Monthly" data-sw="Kila Mwezi">Monthly</button>
+                <button type="button" class="period-btn" onclick="setPeriod('custom', event)" data-en="Custom" data-sw="Maalum">Custom</button>
+            </div>
+        </div>
+
+        <div id="customDateRange" class="hidden">
+            <div class="two-col">
+                <div class="form-group">
+                    <label for="from_date" data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
+                    <input type="date" class="form-control" id="from_date">
+                </div>
+                <div class="form-group">
+                    <label for="to_date" data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
+                    <input type="date" class="form-control" id="to_date">
                 </div>
             </div>
-            
-            <button class="btn btn-primary btn-block w-100 py-2" id="generateBtn" onclick="generateReport()">
-                <i class="fas fa-chart-line"></i>
-                <span data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</span>
-            </button>
+        </div>
+
+        <div class="two-col">
+            <div class="form-group">
+                <label data-en="Transaction Type" data-sw="Aina ya Muamala">Transaction Type</label>
+                <select class="form-control" id="reportType">
+                    <option value="all" data-en="All Transactions" data-sw="Miamala Yote">All Transactions</option>
+                    <option value="income" data-en="Income Only" data-sw="Mapato Tu">Income Only</option>
+                    <option value="expense" data-en="Expense Only" data-sw="Matumizi Tu">Expense Only</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-en="Category" data-sw="Aina">Category</label>
+                <select class="form-control" id="reportCategory">
+                    <option value="all" data-en="All Categories" data-sw="Aina Zote">All Categories</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="generateBtn" onclick="generateReport()">
+            <i class="fas fa-chart-line"></i>
+            <span data-en="Generate Report" data-sw="Tengeneza Ripoti">Generate Report</span>
+        </button>
+
+        <div class="form-group mt-2 mb-0">
+            <label data-en="Export Report" data-sw="Hamisha Ripoti">Export Report</label>
+            <div class="chip-row">
+                <button class="btn-outline" onclick="exportReport('pdf')"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn-outline" onclick="exportReport('csv')"><i class="fas fa-file-csv"></i> CSV</button>
+                <button class="btn-outline" onclick="exportReport('excel')"><i class="fas fa-file-excel"></i> Excel</button>
+            </div>
         </div>
     </div>
-    
-    <div class="card" id="reportResults" style="display: none; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
-        <div class="report-header d-flex justify-content-between align-items-start mb-4">
-            <h3 data-en="Report Results" data-sw="Matokeo ya Ripoti">Report Results</h3>
-            <div class="summary-stats text-end">
-                <p style="margin-bottom: 5px;"><strong data-en="Total Income:" data-sw="Jumla ya Mapato:">Total Income:</strong> <span id="reportIncome" class="text-success fw-bold">KES 0</span></p>
-                <p style="margin-bottom: 5px;"><strong data-en="Total Expense:" data-sw="Jumla ya Matumizi:">Total Expense:</strong> <span id="reportExpense" class="text-danger fw-bold">KES 0</span></p>
-                <p style="margin-bottom: 0;"><strong data-en="Net:" data-sw="Usawa:">Net:</strong> <span id="reportNet" class="fw-bold">KES 0</span></p>
+
+    <div class="card hidden" id="reportResults">
+        <h3 class="mb-2" data-en="Report Results" data-sw="Matokeo ya Ripoti">Report Results</h3>
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-label" data-en="Income" data-sw="Mapato">Income</div>
+                <div class="stat-value income-text" id="reportIncome">KES 0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label" data-en="Expense" data-sw="Matumizi">Expense</div>
+                <div class="stat-value expense-text" id="reportExpense">KES 0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label" data-en="Net" data-sw="Salio">Net</div>
+                <div class="stat-value" id="reportNet">KES 0</div>
             </div>
         </div>
-        
-        <div class="chart-container" style="position: relative; height: 300px; margin-bottom: 40px;">
+
+        <div class="chart-container" style="height: 260px;">
             <canvas id="reportChart"></canvas>
         </div>
-        
-        <div class="report-table-wrapper" style="border: 1px solid #dee2e6; border-radius: 8px; overflow-x: auto;">
-            <table class="table table-bordered table-hover mb-0" id="mainReportTable">
-                <thead class="table-light">
+
+        <div class="report-table-wrapper">
+            <table class="report-table" id="mainReportTable">
+                <thead>
                     <tr>
                         <th data-en="Date" data-sw="Tarehe">Date</th>
                         <th data-en="Type" data-sw="Aina">Type</th>
@@ -96,105 +119,254 @@
             </table>
         </div>
     </div>
+</div>
 
-    <!-- Profit & Loss -->
-    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-top: 30px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">Profit &amp; Loss Statement</h3>
-            <button class="btn btn-outline-primary btn-sm" onclick="loadProfitLoss()"><i class="fas fa-sync"></i> Generate</button>
-        </div>
-        <p class="text-muted small">Uses the same date range as the report above (defaults to last 30 days).</p>
-        <div id="plResults" style="display:none;">
-            <div class="row text-center mb-3">
-                <div class="col-4"><div class="small text-muted">Revenue</div><div class="h5 text-success" id="plRevenue">KES 0</div></div>
-                <div class="col-4"><div class="small text-muted">COGS</div><div class="h5 text-danger" id="plCogs">KES 0</div></div>
-                <div class="col-4"><div class="small text-muted">Gross Profit</div><div class="h5" id="plGross">KES 0</div></div>
+<!-- ============ PROFIT & LOSS TAB ============ -->
+<div class="report-panel" id="tab-pnl">
+    <div class="card">
+        <h3 class="mb-2" data-en="Profit &amp; Loss Statement" data-sw="Taarifa ya Faida na Hasara">Profit &amp; Loss Statement</h3>
+        <div class="two-col">
+            <div class="form-group">
+                <label data-en="From Date" data-sw="Kuanzia Tarehe">From Date</label>
+                <input type="date" class="form-control" id="pnl_from_date">
             </div>
-            <div class="row text-center mb-3">
-                <div class="col-6"><div class="small text-muted">Operating Expenses</div><div class="h5 text-danger" id="plOpex">KES 0</div></div>
-                <div class="col-6"><div class="small text-muted">Net Profit</div><div class="h4 fw-bold" id="plNet">KES 0</div></div>
+            <div class="form-group">
+                <label data-en="To Date" data-sw="Mpaka Tarehe">To Date</label>
+                <input type="date" class="form-control" id="pnl_to_date">
             </div>
-            <p class="text-muted small mb-0">
-                Stock purchases in this period (KES <span id="plInvPurchases">0</span>) are shown as cash out on the
-                Balance Sheet but aren't expensed here until that stock is sold (as COGS above).
-            </p>
         </div>
+        <button class="btn btn-primary btn-block" onclick="loadProfitLoss()">
+            <i class="fas fa-sync"></i> <span data-en="Run Statement" data-sw="Endesha Taarifa">Run Statement</span>
+        </button>
     </div>
 
-    <!-- Balance Sheet -->
-    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-top: 30px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">Balance Sheet</h3>
-            <button class="btn btn-outline-primary btn-sm" onclick="loadBalanceSheet()"><i class="fas fa-sync"></i> Generate (as of today)</button>
+    <div class="card hidden" id="pnlResults">
+        <div class="statement-section">
+            <div class="statement-heading" data-en="Revenue" data-sw="Mapato">Revenue</div>
+            <div id="pnlRevenueLines"></div>
+            <div class="statement-total income-text" id="pnlRevenueTotal"></div>
         </div>
-        <p class="text-muted small mb-3">
-            Simplified cash-basis statement — inventory is valued at today's cost, and there's no accounts-payable tracking yet.
-            Good for management decisions; have an accountant review before using it for a loan application or filing.
+        <div class="statement-section">
+            <div class="statement-heading" data-en="Expenses" data-sw="Matumizi">Expenses</div>
+            <div id="pnlExpenseLines"></div>
+            <div class="statement-total expense-text" id="pnlExpenseTotal"></div>
+        </div>
+        <div class="statement-net" id="pnlNetProfit"></div>
+        <div class="statement-margin" id="pnlMargin"></div>
+    </div>
+</div>
+
+<!-- ============ BALANCE SHEET TAB ============ -->
+<div class="report-panel" id="tab-balance">
+    <div class="card">
+        <h3 class="mb-2" data-en="Balance Sheet" data-sw="Mizania">Balance Sheet</h3>
+        <p class="text-muted" data-en="A simplified view: cash + inventory value, minus anything you owe."
+           data-sw="Muhtasari rahisi: pesa taslimu + thamani ya bidhaa, ukiondoa unachodaiwa.">
+            A simplified view: cash + inventory value, minus anything you owe.
         </p>
-        <div id="bsResults" style="display:none;">
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <h6>Assets</h6>
-                    <div class="d-flex justify-content-between"><span>Cash &amp; M-Pesa</span><span id="bsCash">KES 0</span></div>
-                    <div class="d-flex justify-content-between"><span>Inventory</span><span id="bsInventory">KES 0</span></div>
-                    <hr><div class="d-flex justify-content-between fw-bold"><span>Total Assets</span><span id="bsTotalAssets">KES 0</span></div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <h6>Liabilities</h6>
-                    <div class="d-flex justify-content-between"><span>Accounts Payable</span><span id="bsLiabilities">KES 0</span></div>
-                    <hr><div class="d-flex justify-content-between fw-bold"><span>Total Liabilities</span><span id="bsTotalLiabilities">KES 0</span></div>
-                </div>
-                <div class="col-md-4 mb-3">
-                    <h6>Equity</h6>
-                    <div class="d-flex justify-content-between"><span>Retained Earnings</span><span id="bsEquity">KES 0</span></div>
-                    <hr><div class="d-flex justify-content-between fw-bold"><span>Total Equity</span><span id="bsTotalEquity">KES 0</span></div>
-                </div>
-            </div>
-        </div>
+        <button class="btn btn-primary btn-block" onclick="loadBalanceSheet()">
+            <i class="fas fa-sync"></i> <span data-en="Refresh" data-sw="Sasisha">Refresh</span>
+        </button>
     </div>
 
-    <!-- AI Forecast -->
-    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-top: 30px; margin-bottom: 40px;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">Cash Flow Forecast</h3>
-            <button class="btn btn-outline-primary btn-sm" onclick="loadForecast()"><i class="fas fa-chart-line"></i> Forecast next 30 days</button>
+    <div class="card hidden" id="balanceResults">
+        <div class="statement-section">
+            <div class="statement-heading" data-en="Assets" data-sw="Mali">Assets</div>
+            <div id="assetLines"></div>
+            <div class="statement-total income-text" id="assetTotal"></div>
         </div>
-        <p class="text-muted small">
-            Trend-based projection from your last 90 days of activity (needs at least a week of history to be meaningful).
+        <div class="statement-section">
+            <div class="statement-heading" data-en="Liabilities" data-sw="Madeni">Liabilities</div>
+            <div id="liabilityLines"></div>
+            <div class="statement-total expense-text" id="liabilityTotal"></div>
+        </div>
+        <div class="statement-net" id="equityValue"></div>
+    </div>
+
+    <div class="card">
+        <h3 class="mb-2" data-en="Add a Loan / Payable" data-sw="Ongeza Deni">Add a Loan / Payable</h3>
+        <div class="form-group">
+            <label data-en="Name" data-sw="Jina">Name</label>
+            <input type="text" class="form-control" id="liabilityName" placeholder="e.g. Bank loan, Supplier payable">
+        </div>
+        <div class="two-col">
+            <div class="form-group">
+                <label data-en="Type" data-sw="Aina">Type</label>
+                <select class="form-control" id="liabilityType">
+                    <option value="loan">Loan</option>
+                    <option value="payable">Payable</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label data-en="Amount (KES)" data-sw="Kiasi (KES)">Amount (KES)</label>
+                <input type="number" class="form-control" id="liabilityAmount" step="0.01" min="0">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="addLiability()">
+            <span data-en="Add" data-sw="Ongeza">Add</span>
+        </button>
+    </div>
+</div>
+
+<!-- ============ AI FORECAST TAB ============ -->
+<div class="report-panel" id="tab-forecast">
+    <div class="card">
+        <h3 class="mb-2" data-en="AI Forecast" data-sw="Utabiri wa AI">AI Forecast</h3>
+        <p class="text-muted" data-en="Projects your income and expenses forward based on recent trends."
+           data-sw="Inatabiri mapato na matumizi yako kulingana na mwenendo wa hivi karibuni.">
+            Projects your income and expenses forward based on recent trends.
         </p>
-        <div id="forecastResults" style="display:none;">
-            <div class="row text-center mb-3">
-                <div class="col-4"><div class="small text-muted">Projected Income</div><div class="h5 text-success" id="fIncome">KES 0</div></div>
-                <div class="col-4"><div class="small text-muted">Projected Expense</div><div class="h5 text-danger" id="fExpense">KES 0</div></div>
-                <div class="col-4"><div class="small text-muted">Projected Net</div><div class="h5" id="fNet">KES 0</div></div>
-            </div>
-            <div class="chart-container" style="position: relative; height: 260px;">
-                <canvas id="forecastChart"></canvas>
-            </div>
+        <div class="form-group">
+            <label data-en="Months to Forecast" data-sw="Miezi ya Kutabiri">Months to Forecast</label>
+            <select class="form-control" id="forecastMonths">
+                <option value="3">3 months</option>
+                <option value="6">6 months</option>
+            </select>
         </div>
+        <button class="btn btn-primary btn-block" onclick="loadForecast()">
+            <i class="fas fa-magic"></i> <span data-en="Generate Forecast" data-sw="Tengeneza Utabiri">Generate Forecast</span>
+        </button>
+    </div>
+
+    <div class="card hidden" id="forecastResults">
+        <div class="chart-container" style="height: 260px;">
+            <canvas id="forecastChart"></canvas>
+        </div>
+        <div id="forecastInsights"></div>
+        <p class="text-muted" id="forecastMethod" style="margin-top:10px;font-size:12px;"></p>
     </div>
 </div>
 
 <style>
-    .period-btn.active { background-color: #0d6efd !important; color: white !important; }
-    .income-text { color: #198754; font-weight: 600; }
-    .expense-text { color: #dc3545; font-weight: 600; }
-    .table-bordered th, .table-bordered td {
-        border: 1px solid #dee2e6 !important;
-        vertical-align: middle;
-        padding: 12px;
+    .page-header h1 { font-weight: 700; }
+    .text-muted { color: var(--gray-color); font-size: var(--font-small); }
+
+    .report-tabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        margin-bottom: 20px;
+        padding-bottom: 4px;
+    }
+    .report-tab {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 30px;
+        background: var(--white);
+        color: var(--gray-color);
+        font-weight: 600;
+        font-size: var(--font-small);
+        box-shadow: var(--shadow);
+        cursor: pointer;
         white-space: nowrap;
     }
+    .report-tab.active {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .report-panel { display: none; }
+    .report-panel.active { display: block; }
+
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .period-btn {
+        padding: 10px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        background: var(--white);
+        font-weight: 600;
+        font-size: var(--font-small);
+        cursor: pointer;
+    }
+    .period-btn.active { background: var(--primary-color); border-color: var(--primary-color); color: var(--white); }
+
+    .btn-outline {
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        background: var(--white);
+        font-weight: 600;
+        font-size: var(--font-small);
+        cursor: pointer;
+        flex: 1;
+        min-width: 90px;
+    }
+    .btn-outline:active { background: #f5f5f5; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 480px) {
+        .two-col { grid-template-columns: 1fr; }
+    }
+
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .stat-box { background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; }
+    .stat-label { font-size: 11px; color: var(--gray-color); text-transform: uppercase; font-weight: 600; margin-bottom: 4px; }
+    .stat-value { font-weight: 700; font-size: 15px; }
+
+    .income-text { color: var(--primary-color); }
+    .expense-text { color: var(--danger-color); }
+
+    .report-table-wrapper { overflow-x: auto; border: 1px solid #eee; border-radius: 10px; }
+    .report-table { width: 100%; border-collapse: collapse; font-size: var(--font-small); }
+    .report-table th, .report-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        white-space: nowrap;
+    }
+    .report-table th { background: #f8f9fa; font-weight: 600; }
+
+    .statement-section { margin-bottom: 18px; }
+    .statement-heading {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        color: var(--gray-color);
+        margin-bottom: 8px;
+        border-bottom: 2px solid #eee;
+        padding-bottom: 6px;
+    }
+    .statement-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: var(--font-small); }
+    .statement-total { display: flex; justify-content: space-between; font-weight: 700; padding-top: 8px; border-top: 1px solid #eee; margin-top: 4px; }
+    .statement-net { display: flex; justify-content: space-between; font-weight: 700; font-size: 18px; padding: 14px 0; border-top: 2px solid var(--dark-color); margin-top: 10px; }
+    .statement-margin { color: var(--gray-color); font-size: var(--font-small); text-align: right; }
+
+    .insight-item {
+        display: flex;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: var(--font-small);
+    }
+    .insight-item i { color: var(--primary-color); margin-top: 3px; }
+
+    .liability-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: var(--font-small); }
 </style>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let currentPeriod = 'daily';
 let reportChart = null;
+let forecastChart = null;
 
-document.addEventListener('DOMContentLoaded', loadCategories);
+document.addEventListener('DOMContentLoaded', () => {
+    loadCategories();
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('pnl_to_date').value = today;
+    const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate() - 30);
+    document.getElementById('pnl_from_date').value = monthAgo.toISOString().split('T')[0];
+});
+
+function switchTab(tab) {
+    document.querySelectorAll('.report-tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    document.querySelectorAll('.report-panel').forEach(el => el.classList.toggle('active', el.id === `tab-${tab}`));
+}
 
 function loadCategories() {
     fetch('/categories/api/list').then(res => res.json()).then(data => {
@@ -213,8 +385,8 @@ function loadCategories() {
 function setPeriod(period, event) {
     currentPeriod = period;
     document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    document.getElementById('customDateRange').style.display = (period === 'custom') ? 'block' : 'none';
+    event.currentTarget.classList.add('active');
+    document.getElementById('customDateRange').classList.toggle('hidden', period !== 'custom');
 }
 
 function generateReport() {
@@ -226,32 +398,35 @@ function generateReport() {
         type: document.getElementById('reportType').value,
         category: document.getElementById('reportCategory').value
     });
-    
+
     if (currentPeriod === 'custom') {
         params.append('from_date', document.getElementById('from_date').value);
         params.append('to_date', document.getElementById('to_date').value);
     }
-    
+
     fetch(`/reports/api/generate?${params.toString()}`)
         .then(res => res.json())
         .then(data => { if (data.success) displayReport(data); })
-        .finally(() => { btn.disabled = false; btn.innerHTML = 'Generate Report'; });
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-chart-line"></i> <span>Generate Report</span>';
+        });
 }
 
 function displayReport(data) {
-    document.getElementById('reportResults').style.display = 'block';
+    document.getElementById('reportResults').classList.remove('hidden');
     document.getElementById('reportIncome').textContent = `KES ${data.summary.income.toLocaleString()}`;
     document.getElementById('reportExpense').textContent = `KES ${data.summary.expense.toLocaleString()}`;
     document.getElementById('reportNet').textContent = `KES ${data.summary.net.toLocaleString()}`;
-    
+
     if (reportChart) reportChart.destroy();
     reportChart = new Chart(document.getElementById('reportChart'), {
         type: 'bar',
         data: {
             labels: data.chart_data.labels,
             datasets: [
-                { label: 'Income', data: data.chart_data.income, backgroundColor: '#198754' },
-                { label: 'Expense', data: data.chart_data.expense, backgroundColor: '#dc3545' }
+                { label: 'Income', data: data.chart_data.income, backgroundColor: '#2ecc71' },
+                { label: 'Expense', data: data.chart_data.expense, backgroundColor: '#e74c3c' }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false }
@@ -259,106 +434,17 @@ function displayReport(data) {
 
     const tbody = document.getElementById('reportTableBody');
     tbody.innerHTML = '';
-    
     data.transactions.forEach(t => {
         const typeClass = t.type === 'income' ? 'income-text' : 'expense-text';
-        // Category TD REMOVED from the table generation logic
         tbody.innerHTML += `
             <tr>
                 <td>${t.date}</td>
-                <td class="${typeClass} fw-bold">${t.type.toUpperCase()}</td>
+                <td class="${typeClass}" style="font-weight:700;">${t.type.toUpperCase()}</td>
                 <td>${t.description || '-'}</td>
                 <td>${t.payment_method || 'Cash'}</td>
-                <td class="${typeClass} text-end">KES ${t.amount.toLocaleString()}</td>
+                <td class="${typeClass}" style="text-align:right;font-weight:700;">KES ${t.amount.toLocaleString()}</td>
             </tr>`;
     });
-}
-
-function currentDateRange() {
-    if (currentPeriod === 'custom') {
-        return {
-            from_date: document.getElementById('from_date').value,
-            to_date: document.getElementById('to_date').value
-        };
-    }
-    const to = new Date();
-    const from = new Date();
-    const days = currentPeriod === 'daily' ? 1 : currentPeriod === 'weekly' ? 7 : 30;
-    from.setDate(from.getDate() - days);
-    return {
-        from_date: from.toISOString().slice(0, 10),
-        to_date: to.toISOString().slice(0, 10)
-    };
-}
-
-function loadProfitLoss() {
-    const range = currentDateRange();
-    const params = new URLSearchParams(range);
-    fetch(`/reports/api/profit-loss?${params.toString()}`)
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) { alert(data.error || 'Could not generate P&L'); return; }
-            const s = data.statement;
-            document.getElementById('plResults').style.display = 'block';
-            document.getElementById('plRevenue').textContent = `KES ${s.revenue.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('plCogs').textContent = `KES ${s.cost_of_goods_sold.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('plGross').textContent = `KES ${s.gross_profit.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('plOpex').textContent = `KES ${s.operating_expenses.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('plInvPurchases').textContent = s.inventory_purchases_capitalized.toLocaleString(undefined, {maximumFractionDigits:0});
-            const netEl = document.getElementById('plNet');
-            netEl.textContent = `KES ${s.net_profit.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            netEl.className = 'h4 fw-bold ' + (s.net_profit >= 0 ? 'text-success' : 'text-danger');
-        });
-}
-
-function loadBalanceSheet() {
-    fetch('/reports/api/balance-sheet')
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) { alert(data.error || 'Could not generate Balance Sheet'); return; }
-            const s = data.statement;
-            document.getElementById('bsResults').style.display = 'block';
-            document.getElementById('bsCash').textContent = `KES ${s.assets.cash_and_mpesa.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('bsInventory').textContent = `KES ${s.assets.inventory.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('bsTotalAssets').textContent = `KES ${s.assets.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('bsLiabilities').textContent = `KES ${s.liabilities.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('bsTotalLiabilities').textContent = `KES ${s.liabilities.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('bsEquity').textContent = `KES ${s.equity.retained_earnings.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('bsTotalEquity').textContent = `KES ${s.equity.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-        });
-}
-
-let forecastChart = null;
-function loadForecast() {
-    fetch('/reports/api/forecast?horizon_days=30&lookback_days=90')
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) { alert(data.error || 'Could not generate forecast'); return; }
-            const f = data.forecast;
-            document.getElementById('forecastResults').style.display = 'block';
-            document.getElementById('fIncome').textContent = `KES ${f.income.forecast.total_projected.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            document.getElementById('fExpense').textContent = `KES ${f.expense.forecast.total_projected.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            const netEl = document.getElementById('fNet');
-            const netTotal = f.net.forecast.total_projected;
-            netEl.textContent = `KES ${netTotal.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-            netEl.className = 'h5 ' + (netTotal >= 0 ? 'text-success' : 'text-danger');
-
-            if (forecastChart) forecastChart.destroy();
-            const labels = [...f.net.history.dates.slice(-30), ...f.net.forecast.dates];
-            const historyData = [...f.net.history.values.slice(-30), ...Array(f.net.forecast.dates.length).fill(null)];
-            const forecastData = [...Array(30).fill(null), ...f.net.forecast.values];
-            forecastChart = new Chart(document.getElementById('forecastChart'), {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Actual Net (last 30 days)', data: historyData, borderColor: '#0d6efd', spanGaps: false, tension: 0.3 },
-                        { label: 'Forecast Net', data: forecastData, borderColor: '#f5af19', borderDash: [6, 4], spanGaps: false, tension: 0.3 }
-                    ]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        });
 }
 
 function exportReport(format) {
@@ -373,6 +459,108 @@ function exportReport(format) {
         params.append('to_date', document.getElementById('to_date').value);
     }
     window.location.href = `/reports/api/export?${params.toString()}`;
+}
+
+// ---------- Profit & Loss ----------
+function loadProfitLoss() {
+    const params = new URLSearchParams({
+        from_date: document.getElementById('pnl_from_date').value,
+        to_date: document.getElementById('pnl_to_date').value
+    });
+    fetch(`/reports/api/profit-loss?${params.toString()}`).then(r => r.json()).then(data => {
+        if (!data.success) return;
+        const pl = data.profit_loss;
+        document.getElementById('pnlResults').classList.remove('hidden');
+
+        const revDiv = document.getElementById('pnlRevenueLines');
+        revDiv.innerHTML = pl.revenue.lines.map(l => `<div class="statement-line"><span>${l.name}</span><span>KES ${l.amount.toLocaleString()}</span></div>`).join('') || '<div class="statement-line text-muted">No revenue recorded</div>';
+        document.getElementById('pnlRevenueTotal').innerHTML = `<span>Total Revenue</span><span>KES ${pl.revenue.total.toLocaleString()}</span>`;
+
+        const expDiv = document.getElementById('pnlExpenseLines');
+        expDiv.innerHTML = pl.expenses.lines.map(l => `<div class="statement-line"><span>${l.name}</span><span>KES ${l.amount.toLocaleString()}</span></div>`).join('') || '<div class="statement-line text-muted">No expenses recorded</div>';
+        document.getElementById('pnlExpenseTotal').innerHTML = `<span>Total Expenses</span><span>KES ${pl.expenses.total.toLocaleString()}</span>`;
+
+        document.getElementById('pnlNetProfit').innerHTML = `<span>Net Profit</span><span>KES ${pl.net_profit.toLocaleString()}</span>`;
+        document.getElementById('pnlMargin').textContent = `Net margin: ${pl.net_margin_percent}%`;
+    });
+}
+
+// ---------- Balance Sheet ----------
+function loadBalanceSheet() {
+    fetch('/reports/api/balance-sheet').then(r => r.json()).then(data => {
+        if (!data.success) return;
+        const bs = data.balance_sheet;
+        document.getElementById('balanceResults').classList.remove('hidden');
+
+        document.getElementById('assetLines').innerHTML = bs.assets.lines.map(l => `<div class="statement-line"><span>${l.name}</span><span>KES ${l.amount.toLocaleString()}</span></div>`).join('');
+        document.getElementById('assetTotal').innerHTML = `<span>Total Assets</span><span>KES ${bs.assets.total.toLocaleString()}</span>`;
+
+        document.getElementById('liabilityLines').innerHTML = bs.liabilities.lines.length
+            ? bs.liabilities.lines.map(l => `<div class="statement-line"><span>${l.name}</span><span>KES ${l.amount.toLocaleString()}</span></div>`).join('')
+            : '<div class="statement-line text-muted">No liabilities recorded</div>';
+        document.getElementById('liabilityTotal').innerHTML = `<span>Total Liabilities</span><span>KES ${bs.liabilities.total.toLocaleString()}</span>`;
+
+        document.getElementById('equityValue').innerHTML = `<span>Owner's Equity</span><span>KES ${bs.equity.toLocaleString()}</span>`;
+    });
+}
+
+function addLiability() {
+    const payload = {
+        name: document.getElementById('liabilityName').value,
+        type: document.getElementById('liabilityType').value,
+        amount: document.getElementById('liabilityAmount').value
+    };
+    if (!payload.name || !payload.amount) { alert('Please provide a name and amount'); return; }
+    fetch('/reports/api/liabilities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            document.getElementById('liabilityName').value = '';
+            document.getElementById('liabilityAmount').value = '';
+            loadBalanceSheet();
+        } else {
+            alert(data.error || 'Could not add liability');
+        }
+    });
+}
+
+// ---------- AI Forecast ----------
+function loadForecast() {
+    const months = document.getElementById('forecastMonths').value;
+    fetch(`/reports/api/forecast?months=${months}`).then(r => r.json()).then(data => {
+        if (!data.success) return;
+        const f = data.forecast;
+        document.getElementById('forecastResults').classList.remove('hidden');
+
+        const labels = [...f.history.labels, ...f.forecast.labels];
+        const incomeData = [...f.history.income, ...f.forecast.income];
+        const expenseData = [...f.history.expense, ...f.forecast.expense];
+        const splitIndex = f.history.labels.length;
+
+        if (forecastChart) forecastChart.destroy();
+        forecastChart = new Chart(document.getElementById('forecastChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Income', data: incomeData, borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', tension: 0.3 },
+                    { label: 'Expense', data: expenseData, borderColor: '#e74c3c', backgroundColor: 'rgba(231,76,60,0.1)', tension: 0.3 }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    annotation: {}
+                }
+            }
+        });
+
+        const insightsDiv = document.getElementById('forecastInsights');
+        insightsDiv.innerHTML = f.insights.map(i => `<div class="insight-item"><i class="fas fa-lightbulb"></i><span>${i}</span></div>`).join('') || '<p class="text-muted">Not enough history yet for a confident forecast - keep logging transactions.</p>';
+        document.getElementById('forecastMethod').textContent = f.method;
+    });
 }
 </script>
 {% endblock %}

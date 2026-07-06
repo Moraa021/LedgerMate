@@ -7,6 +7,11 @@
         --font-small: 12px;
     }
     
+    .app-logo {
+        height: 26px;
+        max-width: 110px;
+    }
+
     /* Larger touch targets */
     .btn, 
     .nav-item,

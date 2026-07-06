@@ -307,5 +307,110 @@ class ReportService:
             }
         }
 
+    def generate_profit_loss(self, user_id, from_date=None, to_date=None):
+        """
+        Standard accounting-style Profit & Loss statement:
+        Revenue (by category) - Expenses (by category) = Net Profit
+        """
+        if not to_date:
+            to_date = datetime.utcnow().date()
+        if not from_date:
+            from_date = to_date - timedelta(days=30)
+
+        transactions = Transaction.query.filter(
+            Transaction.user_id == user_id,
+            Transaction.is_deleted == False,
+            func.date(Transaction.transaction_date) >= from_date,
+            func.date(Transaction.transaction_date) <= to_date
+        ).all()
+
+        category_objects = {c.id: c for c in Category.query.filter_by(user_id=user_id).all()}
+
+        revenue_lines = {}
+        expense_lines = {}
+
+        for t in transactions:
+            cat = category_objects.get(t.category_id)
+            cat_name = cat.name if cat else 'Uncategorized'
+            bucket = revenue_lines if t.type == 'income' else expense_lines
+            bucket[cat_name] = bucket.get(cat_name, 0) + float(t.amount)
+
+        total_revenue = sum(revenue_lines.values())
+        total_expense = sum(expense_lines.values())
+        net_profit = total_revenue - total_expense
+
+        def to_sorted_lines(d):
+            return [{'name': k, 'amount': round(v, 2)} for k, v in sorted(d.items(), key=lambda x: -x[1])]
+
+        return {
+            'from_date': from_date.strftime('%Y-%m-%d'),
+            'to_date': to_date.strftime('%Y-%m-%d'),
+            'revenue': {
+                'lines': to_sorted_lines(revenue_lines),
+                'total': round(total_revenue, 2)
+            },
+            'expenses': {
+                'lines': to_sorted_lines(expense_lines),
+                'total': round(total_expense, 2)
+            },
+            'net_profit': round(net_profit, 2),
+            'net_margin_percent': round((net_profit / total_revenue * 100), 1) if total_revenue > 0 else 0
+        }
+
+    def generate_balance_sheet(self, user_id, as_of_date=None):
+        """
+        Simplified balance sheet for a small business without full double-entry
+        bookkeeping:
+          Assets      = Cash on hand (cumulative income - expense to date) + Inventory value
+          Liabilities = Loans/payables the owner has recorded
+          Equity      = Assets - Liabilities (retained earnings / owner's equity, as a plug)
+        """
+        from app.models import InventoryItem, Liability
+
+        if not as_of_date:
+            as_of_date = datetime.utcnow().date()
+
+        income_total = db.session.query(func.sum(Transaction.amount)).filter(
+            Transaction.user_id == user_id,
+            Transaction.type == 'income',
+            Transaction.is_deleted == False,
+            func.date(Transaction.transaction_date) <= as_of_date
+        ).scalar() or 0
+
+        expense_total = db.session.query(func.sum(Transaction.amount)).filter(
+            Transaction.user_id == user_id,
+            Transaction.type == 'expense',
+            Transaction.is_deleted == False,
+            func.date(Transaction.transaction_date) <= as_of_date
+        ).scalar() or 0
+
+        cash_on_hand = float(income_total) - float(expense_total)
+
+        inventory_items = InventoryItem.query.filter_by(user_id=user_id, is_deleted=False).all()
+        inventory_value = sum(i.stock_value for i in inventory_items)
+
+        liabilities = Liability.query.filter_by(user_id=user_id, is_deleted=False).all()
+        liability_lines = [{'name': l.name, 'type': l.liability_type, 'amount': float(l.amount)} for l in liabilities]
+        total_liabilities = sum(l['amount'] for l in liability_lines)
+
+        total_assets = cash_on_hand + inventory_value
+        equity = total_assets - total_liabilities
+
+        return {
+            'as_of_date': as_of_date.strftime('%Y-%m-%d'),
+            'assets': {
+                'lines': [
+                    {'name': 'Cash on hand', 'amount': round(cash_on_hand, 2)},
+                    {'name': 'Inventory', 'amount': round(inventory_value, 2)}
+                ],
+                'total': round(total_assets, 2)
+            },
+            'liabilities': {
+                'lines': liability_lines,
+                'total': round(total_liabilities, 2)
+            },
+            'equity': round(equity, 2)
+        }
+
 # Create singleton instance
 report_service = ReportService()

@@ -42,6 +42,42 @@ body {
     padding: var(--spacing);
 }
 
+/* App Header / Logo */
+.app-header {
+    background: var(--white);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 500;
+}
+
+.app-header .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+}
+
+.app-logo {
+    height: 32px;
+    width: auto;
+    max-width: 140px;
+    object-fit: contain;
+    display: block;
+}
+
+.user-greeting {
+    font-size: var(--font-small);
+    color: var(--gray-color);
+    font-weight: 600;
+}
+
 /* Language Toggle */
 .language-toggle {
     position: fixed;

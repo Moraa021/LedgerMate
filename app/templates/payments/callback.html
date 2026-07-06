@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Status{% endblock %}
+
+{% block content %}
+<div class="card text-center" style="padding: 40px 20px;">
+    {% if verified %}
+        <i class="fas fa-check-circle" style="font-size: 60px; color: var(--primary-color); margin-bottom: 20px;"></i>
+        <h2 data-en="Payment Received!" data-sw="Malipo Yamepokelewa!">Payment Received!</h2>
+        <p class="text-muted" style="margin: 10px 0 20px;">
+            KES {{ '%.2f'|format(payment_request.amount) if payment_request else '' }} has been recorded automatically in your transactions.
+        </p>
+        <a href="{{ url_for('transactions.transactions') }}" class="btn btn-primary" data-en="View Transactions" data-sw="Tazama Miamala">View Transactions</a>
+    {% else %}
+        <i class="fas fa-exclamation-circle" style="font-size: 60px; color: var(--warning-color); margin-bottom: 20px;"></i>
+        <h2 data-en="Payment Not Confirmed" data-sw="Malipo Hayajathibitishwa">Payment Not Confirmed</h2>
+        <p class="text-muted" style="margin: 10px 0 20px;" data-en="If money was deducted, it may still be processing - we'll record it automatically as soon as Paystack confirms it."
+           data-sw="Ikiwa pesa zimetolewa, huenda bado zinasindikwa - tutairekodi moja kwa moja Paystack itakapothibitisha.">
+            If money was deducted, it may still be processing - we'll record it automatically as soon as Paystack confirms it.
+        </p>
+        <a href="{{ url_for('payments.request_payment') }}" class="btn btn-primary" data-en="Back" data-sw="Rudi">Back</a>
+    {% endif %}
+</div>
+{% endblock %}

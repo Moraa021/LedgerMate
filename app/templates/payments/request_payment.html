@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Get Paid{% endblock %}
+
+{% block content %}
+<div class="page-header mb-2">
+    <h1 data-en="Get Paid" data-sw="Pokea Malipo">Get Paid</h1>
+    <p class="text-muted" data-en="Create a payment link and send it to your customer. Once they pay, it's recorded automatically - nothing to type in."
+       data-sw="Tengeneza kiungo cha malipo na umtumie mteja wako. Akilipa, inarekodiwa moja kwa moja.">
+        Create a payment link and send it to your customer. Once they pay, it's recorded automatically - nothing to type in.
+    </p>
+</div>
+
+<div class="card">
+    <form method="POST" id="paymentRequestForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label data-en="Amount (KES)" data-sw="Kiasi (KES)">Amount (KES)</label>
+            <input type="number" name="amount" class="form-control" step="0.01" min="1" required placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+            <label data-en="What's this for?" data-sw="Hii ni ya nini?">What's this for?</label>
+            <input type="text" name="description" class="form-control" placeholder="e.g. Order #23, Haircut, Consultation">
+        </div>
+
+        <div class="form-group">
+            <label data-en="File under category" data-sw="Weka chini ya aina">File under category</label>
+            <select name="category_id" class="form-control">
+                <option value="">Auto (default sales category)</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.icon or '📁' }} {{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label data-en="Customer email (optional)" data-sw="Barua pepe ya mteja (si lazima)">Customer email (optional)</label>
+            <input type="email" name="customer_email" class="form-control" placeholder="customer@example.com">
+        </div>
+
+        <div class="form-group">
+            <label data-en="Customer name (optional)" data-sw="Jina la mteja (si lazima)">Customer name (optional)</label>
+            <input type="text" name="customer_name" class="form-control" placeholder="Jane Doe">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="generateLinkBtn">
+            <i class="fas fa-link"></i>
+            <span data-en="Generate Payment Link" data-sw="Tengeneza Kiungo cha Malipo">Generate Payment Link</span>
+        </button>
+    </form>
+</div>
+
+{% if recent_requests %}
+<div class="card">
+    <h3 class="mb-2" data-en="Recent Payment Links" data-sw="Viungo vya Hivi Karibuni">Recent Payment Links</h3>
+    <ul class="transaction-list">
+        {% for pr in recent_requests %}
+        <li class="transaction-item">
+            <div class="transaction-icon {{ 'income' if pr.status == 'success' else 'expense' }}">
+                <i class="fas {{ 'fa-check' if pr.status == 'success' else 'fa-clock' }}"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-title">{{ pr.description or 'Payment request' }}</div>
+                <div class="transaction-meta">{{ pr.status|capitalize }} &middot; {{ pr.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+            <div class="transaction-amount">KES {{ '%.2f'|format(pr.amount) }}</div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<style>
+    .page-header h1 { font-weight: 700; margin-bottom: 6px; }
+    .page-header .text-muted { color: var(--gray-color); font-size: var(--font-small); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('paymentRequestForm').addEventListener('submit', function() {
+    const btn = document.getElementById('generateLinkBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+});
+</script>
+{% endblock %}

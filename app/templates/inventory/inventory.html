@@ -3,101 +3,102 @@
 {% block title %}Inventory{% endblock %}
 
 {% block content %}
-<div class="inventory-page" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-        <h1 style="font-weight: 700;">Inventory</h1>
-        <button class="btn btn-primary" onclick="showModal('addItemModal')">
-            <i class="fas fa-plus"></i> Add Item
-        </button>
-    </div>
+<div class="page-header mb-2">
+    <h1 data-en="Inventory" data-sw="Bidhaa Dukani">Inventory</h1>
+</div>
 
-    <div class="stats-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin: 20px 0;">
-        <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 10px;">
-            <h3 style="font-size: 0.9rem; opacity: 0.9;">Items Tracked</h3>
-            <p class="stat-number" id="totalItems" style="font-size: 1.8rem; font-weight: 700;">0</p>
-        </div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #00b09b, #96c93d); color: white; padding: 20px; border-radius: 10px;">
-            <h3 style="font-size: 0.9rem; opacity: 0.9;">Stock Value</h3>
-            <p class="stat-number" id="totalValue" style="font-size: 1.8rem; font-weight: 700;">KES 0</p>
-        </div>
-        <div class="stat-card" style="background: linear-gradient(135deg, #f12711, #f5af19); color: white; padding: 20px; border-radius: 10px;">
-            <h3 style="font-size: 0.9rem; opacity: 0.9;">Low Stock Alerts</h3>
-            <p class="stat-number" id="lowStockCount" style="font-size: 1.8rem; font-weight: 700;">0</p>
-        </div>
-    </div>
-
-    <div class="card" style="background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow-x: auto;">
-        <table class="table table-hover mb-0" style="min-width: 700px;">
-            <thead class="table-light">
-                <tr>
-                    <th>Item</th>
-                    <th>SKU</th>
-                    <th>Qty on Hand</th>
-                    <th>Unit Cost</th>
-                    <th>Selling Price</th>
-                    <th>Stock Value</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="inventoryTableBody">
-                <tr><td colspan="7" class="text-center text-muted py-4">Loading...</td></tr>
-            </tbody>
-        </table>
+<div class="summary-cards">
+    <div class="summary-card net">
+        <h3 data-en="Total Stock Value" data-sw="Thamani ya Bidhaa">Total Stock Value</h3>
+        <div class="amount" id="totalStockValue">KES 0</div>
     </div>
 </div>
+
+<div id="lowStockBanner" class="alert alert-warning hidden" style="position: static; margin-bottom: 20px;">
+    <i class="fas fa-exclamation-triangle"></i> <span id="lowStockText"></span>
+</div>
+
+<button class="btn btn-primary btn-block mb-2" onclick="openAddItemModal()">
+    <i class="fas fa-plus"></i> <span data-en="Add Item" data-sw="Ongeza Bidhaa">Add Item</span>
+</button>
+
+<div id="itemsList"></div>
 
 <!-- Add Item Modal -->
-<div class="modal" id="addItemModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1050; align-items:center; justify-content:center;">
-    <div class="modal-content" style="background:white; border-radius:12px; padding:25px; max-width:420px; width:90%;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">Add Inventory Item</h4>
-            <button class="btn-close" onclick="closeModal('addItemModal')"></button>
+<div class="modal" id="addItemModal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 data-en="Add Inventory Item" data-sw="Ongeza Bidhaa">Add Inventory Item</h3>
+            <button class="modal-close" onclick="closeModal('addItemModal')">&times;</button>
         </div>
-        <form id="addItemForm" onsubmit="submitAddItem(event)">
-            <div class="mb-2"><label class="form-label small fw-bold">Name</label>
-                <input type="text" class="form-control" id="itemName" required></div>
-            <div class="mb-2"><label class="form-label small fw-bold">SKU (optional)</label>
-                <input type="text" class="form-control" id="itemSku"></div>
-            <div class="row mb-2">
-                <div class="col-6"><label class="form-label small fw-bold">Unit</label>
-                    <input type="text" class="form-control" id="itemUnit" value="pcs"></div>
-                <div class="col-6"><label class="form-label small fw-bold">Reorder Level</label>
-                    <input type="number" step="0.01" class="form-control" id="itemReorder" value="0"></div>
-            </div>
-            <div class="row mb-2">
-                <div class="col-6"><label class="form-label small fw-bold">Opening Qty</label>
-                    <input type="number" step="0.01" class="form-control" id="itemOpeningQty" value="0"></div>
-                <div class="col-6"><label class="form-label small fw-bold">Unit Cost (KES)</label>
-                    <input type="number" step="0.01" class="form-control" id="itemUnitCost" value="0"></div>
-            </div>
-            <div class="mb-3"><label class="form-label small fw-bold">Selling Price (KES)</label>
-                <input type="number" step="0.01" class="form-control" id="itemSellingPrice" value="0"></div>
-            <button type="submit" class="btn btn-primary w-100">Save Item</button>
-        </form>
+        <div class="form-group">
+            <label>Item Name</label>
+            <input type="text" id="itemName" class="form-control" placeholder="e.g. Sugar 2kg">
+        </div>
+        <div class="form-group">
+            <label>SKU (optional)</label>
+            <input type="text" id="itemSku" class="form-control" placeholder="e.g. SUG-002">
+        </div>
+        <div class="form-group">
+            <label>Category (optional)</label>
+            <input type="text" id="itemCategory" class="form-control" placeholder="e.g. Groceries">
+        </div>
+        <div class="form-group">
+            <label>Quantity on Hand</label>
+            <input type="number" id="itemQty" class="form-control" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Unit Cost (KES)</label>
+            <input type="number" id="itemCost" class="form-control" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Selling Price (KES)</label>
+            <input type="number" id="itemPrice" class="form-control" value="0" step="0.01">
+        </div>
+        <div class="form-group">
+            <label>Reorder Level</label>
+            <input type="number" id="itemReorder" class="form-control" value="5" step="0.01">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitAddItem()">Save Item</button>
     </div>
 </div>
 
-<!-- Purchase / Sale Modal -->
-<div class="modal" id="movementModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1050; align-items:center; justify-content:center;">
-    <div class="modal-content" style="background:white; border-radius:12px; padding:25px; max-width:420px; width:90%;">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0" id="movementModalTitle">Record Purchase</h4>
-            <button class="btn-close" onclick="closeModal('movementModal')"></button>
+<!-- Movement Modal -->
+<div class="modal" id="movementModal" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="movementItemName">Update Stock</h3>
+            <button class="modal-close" onclick="closeModal('movementModal')">&times;</button>
         </div>
-        <form id="movementForm" onsubmit="submitMovement(event)">
-            <input type="hidden" id="movementItemId">
-            <input type="hidden" id="movementType">
-            <div class="mb-2"><label class="form-label small fw-bold">Quantity</label>
-                <input type="number" step="0.01" class="form-control" id="movementQty" required></div>
-            <div class="mb-2" id="movementPriceGroup">
-                <label class="form-label small fw-bold" id="movementPriceLabel">Unit Cost (KES)</label>
-                <input type="number" step="0.01" class="form-control" id="movementPrice"></div>
-            <div class="mb-3"><label class="form-label small fw-bold">Description (optional)</label>
-                <input type="text" class="form-control" id="movementDescription"></div>
-            <button type="submit" class="btn btn-primary w-100">Save</button>
-        </form>
+        <input type="hidden" id="movementItemId">
+        <div class="form-group">
+            <label>Action</label>
+            <select id="movementType" class="form-control">
+                <option value="restock">Restock (add stock)</option>
+                <option value="sale">Sale (remove stock)</option>
+                <option value="adjustment">Adjustment (set exact quantity)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label id="movementQtyLabel">Quantity</label>
+            <input type="number" id="movementQty" class="form-control" step="0.01" min="0">
+        </div>
+        <div class="form-group" id="movementCostGroup">
+            <label>New Unit Cost (optional, for restocks)</label>
+            <input type="number" id="movementCost" class="form-control" step="0.01">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="submitMovement()">Save</button>
     </div>
 </div>
+
+<style>
+    .page-header h1 { font-weight: 700; }
+    .inventory-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+    .inventory-item:last-child { border-bottom: none; }
+    .stock-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+    .stock-badge.low { background: rgba(231,76,60,0.15); color: var(--danger-color); }
+    .stock-badge.ok { background: rgba(46,204,113,0.15); color: var(--primary-color); }
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -110,95 +111,89 @@ function loadItems() {
     fetch('/inventory/api/list').then(r => r.json()).then(data => {
         if (!data.success) return;
         items = data.items;
-        document.getElementById('totalItems').textContent = items.length;
-        document.getElementById('totalValue').textContent = `KES ${data.total_value.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
-        document.getElementById('lowStockCount').textContent = data.low_stock_count;
-        renderTable();
+        document.getElementById('totalStockValue').textContent = `KES ${data.total_stock_value.toLocaleString()}`;
+
+        const banner = document.getElementById('lowStockBanner');
+        if (data.low_stock_count > 0) {
+            banner.classList.remove('hidden');
+            document.getElementById('lowStockText').textContent = `${data.low_stock_count} item(s) are low on stock and need reordering.`;
+        } else {
+            banner.classList.add('hidden');
+        }
+
+        renderItems();
     });
 }
 
-function renderTable() {
-    const tbody = document.getElementById('inventoryTableBody');
+function renderItems() {
+    const container = document.getElementById('itemsList');
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No items yet. Add your first item.</td></tr>';
+        container.innerHTML = `<div class="card text-center"><i class="fas fa-boxes" style="font-size:40px;color:#ccc;"></i><p>No inventory items yet.</p></div>`;
         return;
     }
-    tbody.innerHTML = items.map(i => `
-        <tr>
-            <td>${i.name} ${i.is_low_stock ? '<span class="badge bg-warning text-dark ms-1">Low stock</span>' : ''}</td>
-            <td>${i.sku || '-'}</td>
-            <td>${i.quantity_on_hand} ${i.unit}</td>
-            <td>KES ${i.unit_cost.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-            <td>KES ${i.selling_price.toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-            <td>KES ${i.stock_value.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
-            <td>
-                <button class="btn btn-sm btn-outline-success" onclick="openMovement('${i.id}', 'purchase')">+ Buy</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="openMovement('${i.id}', 'sale')">- Sell</button>
-            </td>
-        </tr>`).join('');
+    let html = '<div class="card" style="padding: 0;">';
+    items.forEach(item => {
+        html += `
+            <div class="inventory-item">
+                <div>
+                    <div style="font-weight:600;">${item.name} ${item.sku ? '<span style="color:#999;font-size:12px;">('+item.sku+')</span>' : ''}</div>
+                    <div style="font-size:13px;color:#888;">${item.category || 'Uncategorized'} &middot; KES ${item.unit_price.toLocaleString()} each</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="stock-badge ${item.is_low_stock ? 'low' : 'ok'}">${item.quantity_on_hand} in stock</div>
+                    <div style="margin-top:6px;">
+                        <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;" onclick="openMovementModal('${item.id}','${item.name.replace(/'/g,"")}')">Update</button>
+                    </div>
+                </div>
+            </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
 }
 
-function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function openAddItemModal() { document.getElementById('addItemModal').style.display = 'flex'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-function submitAddItem(event) {
-    event.preventDefault();
+function submitAddItem() {
+    const payload = {
+        name: document.getElementById('itemName').value,
+        sku: document.getElementById('itemSku').value,
+        category: document.getElementById('itemCategory').value,
+        quantity_on_hand: document.getElementById('itemQty').value,
+        unit_cost: document.getElementById('itemCost').value,
+        unit_price: document.getElementById('itemPrice').value,
+        reorder_level: document.getElementById('itemReorder').value
+    };
     fetch('/inventory/api/add', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            name: document.getElementById('itemName').value,
-            sku: document.getElementById('itemSku').value,
-            unit: document.getElementById('itemUnit').value,
-            unit_cost: parseFloat(document.getElementById('itemUnitCost').value) || 0,
-            selling_price: parseFloat(document.getElementById('itemSellingPrice').value) || 0,
-            opening_quantity: parseFloat(document.getElementById('itemOpeningQty').value) || 0,
-            reorder_level: parseFloat(document.getElementById('itemReorder').value) || 0,
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     }).then(r => r.json()).then(data => {
-        if (data.success) {
-            closeModal('addItemModal');
-            document.getElementById('addItemForm').reset();
-            loadItems();
-        } else {
-            alert(data.error || 'Could not add item');
-        }
+        if (data.success) { closeModal('addItemModal'); loadItems(); }
+        else alert(data.error || 'Could not add item');
     });
 }
 
-function openMovement(publicId, type) {
-    document.getElementById('movementItemId').value = publicId;
-    document.getElementById('movementType').value = type;
-    document.getElementById('movementModalTitle').textContent = type === 'purchase' ? 'Record Purchase' : 'Record Sale';
-    document.getElementById('movementPriceLabel').textContent = type === 'purchase' ? 'Unit Cost (KES)' : 'Unit Price (KES, optional - defaults to selling price)';
-    showModal('movementModal');
+function openMovementModal(id, name) {
+    document.getElementById('movementItemId').value = id;
+    document.getElementById('movementItemName').textContent = `Update: ${name}`;
+    document.getElementById('movementModal').style.display = 'flex';
 }
 
-function submitMovement(event) {
-    event.preventDefault();
-    const publicId = document.getElementById('movementItemId').value;
-    const type = document.getElementById('movementType').value;
-    const qty = parseFloat(document.getElementById('movementQty').value);
-    const price = document.getElementById('movementPrice').value;
-    const description = document.getElementById('movementDescription').value;
-
-    const endpoint = type === 'purchase' ? 'purchase' : 'sale';
-    const body = type === 'purchase'
-        ? { quantity: qty, unit_cost: parseFloat(price) || 0, description }
-        : { quantity: qty, unit_price: price ? parseFloat(price) : null, description };
-
-    fetch(`/inventory/api/${publicId}/${endpoint}`, {
+function submitMovement() {
+    const id = document.getElementById('movementItemId').value;
+    const payload = {
+        movement_type: document.getElementById('movementType').value,
+        quantity: document.getElementById('movementQty').value,
+        unit_cost: document.getElementById('movementCost').value
+    };
+    fetch(`/inventory/api/${id}/movement`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(body)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
     }).then(r => r.json()).then(data => {
-        if (data.success) {
-            closeModal('movementModal');
-            document.getElementById('movementForm').reset();
-            loadItems();
-        } else {
-            alert(data.error || 'Could not save movement');
-        }
+        if (data.success) { closeModal('movementModal'); loadItems(); }
+        else alert(data.error || 'Could not update stock');
     });
 }
 </script>

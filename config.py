@@ -32,30 +32,20 @@ class Config:
     # App specific
     ITEMS_PER_PAGE = 20
     DEFAULT_CURRENCY = 'KES'
+
+    # --- PAYSTACK CONFIG ---
+    # Get these from https://dashboard.paystack.com/#/settings/developers
+    PAYSTACK_SECRET_KEY = os.environ.get('PAYSTACK_SECRET_KEY')
+    PAYSTACK_PUBLIC_KEY = os.environ.get('PAYSTACK_PUBLIC_KEY')
+    # Category (by name) that auto-detected Paystack payments get filed under
+    # if the user hasn't picked one for the payment request
+    PAYSTACK_DEFAULT_CATEGORY = os.environ.get('PAYSTACK_DEFAULT_CATEGORY', 'Product Sales')
     
     # Supported languages
     LANGUAGES = {
         'en': 'English',
         'sw': 'Kiswahili'
     }
-
-    # --- DARAJA (M-PESA) CONFIG ---
-    # 'sandbox' while developing/testing, 'production' once Safaricom approves
-    # your go-live application.
-    MPESA_ENV = os.environ.get('MPESA_ENV', 'sandbox')
-    MPESA_CONSUMER_KEY = os.environ.get('MPESA_CONSUMER_KEY')
-    MPESA_CONSUMER_SECRET = os.environ.get('MPESA_CONSUMER_SECRET')
-    MPESA_SHORTCODE = os.environ.get('MPESA_SHORTCODE')  # Paybill or Till number
-    MPESA_PASSKEY = os.environ.get('MPESA_PASSKEY')
-
-    # Public base URL Safaricom can reach for callbacks, e.g.
-    # https://your-app.vercel.app or an ngrok URL in development.
-    MPESA_CALLBACK_BASE_URL = os.environ.get('MPESA_CALLBACK_BASE_URL', '')
-
-    # Optional: if you're running LedgerMate for a single business (not
-    # multi-tenant), set this to that user's numeric ID so C2B payments with
-    # no recognizable account reference still get posted to the ledger.
-    MPESA_DEFAULT_USER_ID = os.environ.get('MPESA_DEFAULT_USER_ID')
 
 class DevelopmentConfig(Config):
     DEBUG = True
