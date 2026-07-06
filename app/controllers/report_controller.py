@@ -2,10 +2,66 @@ from flask import Blueprint, render_template, request, jsonify, send_file, sessi
 from flask_login import login_required, current_user
 from app.services.report_service import report_service
 from app.services.export_service import export_service
+from app.services.financial_statement_service import financial_statement_service
+from app.services.forecast_service import forecast_service
 from datetime import datetime, timedelta
 import io
 
 bp = Blueprint('reports', __name__, url_prefix='/reports')
+
+
+@bp.route('/api/profit-loss')
+@login_required
+def profit_loss():
+    """Profit & Loss statement (simplified, cash-basis - see
+    financial_statement_service module docstring for caveats)."""
+    try:
+        from_date_str = request.args.get('from_date')
+        to_date_str = request.args.get('to_date')
+
+        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date() if from_date_str else \
+            datetime.utcnow().date() - timedelta(days=30)
+        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date() if to_date_str else \
+            datetime.utcnow().date()
+
+        statement = financial_statement_service.profit_and_loss(
+            current_user.id, from_date=from_date, to_date=to_date
+        )
+        return jsonify({'success': True, 'statement': statement})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@bp.route('/api/balance-sheet')
+@login_required
+def balance_sheet():
+    """Balance Sheet as of a given date (defaults to today)."""
+    try:
+        as_of_str = request.args.get('as_of_date')
+        as_of_date = datetime.strptime(as_of_str, '%Y-%m-%d').date() if as_of_str else None
+
+        statement = financial_statement_service.balance_sheet(current_user.id, as_of_date=as_of_date)
+        return jsonify({'success': True, 'statement': statement})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@bp.route('/api/forecast')
+@login_required
+def forecast():
+    """AI/trend-based cash flow forecast (income, expense, net)."""
+    try:
+        horizon = request.args.get('horizon_days', 30, type=int)
+        lookback = request.args.get('lookback_days', 90, type=int)
+        horizon = max(1, min(horizon, 180))
+        lookback = max(14, min(lookback, 365))
+
+        data = forecast_service.cash_flow_forecast(
+            current_user.id, horizon_days=horizon, lookback_days=lookback
+        )
+        return jsonify({'success': True, 'forecast': data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @bp.route('/')
 @login_required

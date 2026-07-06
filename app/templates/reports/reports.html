@@ -96,6 +96,83 @@
             </table>
         </div>
     </div>
+
+    <!-- Profit & Loss -->
+    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-top: 30px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Profit &amp; Loss Statement</h3>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadProfitLoss()"><i class="fas fa-sync"></i> Generate</button>
+        </div>
+        <p class="text-muted small">Uses the same date range as the report above (defaults to last 30 days).</p>
+        <div id="plResults" style="display:none;">
+            <div class="row text-center mb-3">
+                <div class="col-4"><div class="small text-muted">Revenue</div><div class="h5 text-success" id="plRevenue">KES 0</div></div>
+                <div class="col-4"><div class="small text-muted">COGS</div><div class="h5 text-danger" id="plCogs">KES 0</div></div>
+                <div class="col-4"><div class="small text-muted">Gross Profit</div><div class="h5" id="plGross">KES 0</div></div>
+            </div>
+            <div class="row text-center mb-3">
+                <div class="col-6"><div class="small text-muted">Operating Expenses</div><div class="h5 text-danger" id="plOpex">KES 0</div></div>
+                <div class="col-6"><div class="small text-muted">Net Profit</div><div class="h4 fw-bold" id="plNet">KES 0</div></div>
+            </div>
+            <p class="text-muted small mb-0">
+                Stock purchases in this period (KES <span id="plInvPurchases">0</span>) are shown as cash out on the
+                Balance Sheet but aren't expensed here until that stock is sold (as COGS above).
+            </p>
+        </div>
+    </div>
+
+    <!-- Balance Sheet -->
+    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-top: 30px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Balance Sheet</h3>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadBalanceSheet()"><i class="fas fa-sync"></i> Generate (as of today)</button>
+        </div>
+        <p class="text-muted small mb-3">
+            Simplified cash-basis statement — inventory is valued at today's cost, and there's no accounts-payable tracking yet.
+            Good for management decisions; have an accountant review before using it for a loan application or filing.
+        </p>
+        <div id="bsResults" style="display:none;">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h6>Assets</h6>
+                    <div class="d-flex justify-content-between"><span>Cash &amp; M-Pesa</span><span id="bsCash">KES 0</span></div>
+                    <div class="d-flex justify-content-between"><span>Inventory</span><span id="bsInventory">KES 0</span></div>
+                    <hr><div class="d-flex justify-content-between fw-bold"><span>Total Assets</span><span id="bsTotalAssets">KES 0</span></div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6>Liabilities</h6>
+                    <div class="d-flex justify-content-between"><span>Accounts Payable</span><span id="bsLiabilities">KES 0</span></div>
+                    <hr><div class="d-flex justify-content-between fw-bold"><span>Total Liabilities</span><span id="bsTotalLiabilities">KES 0</span></div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6>Equity</h6>
+                    <div class="d-flex justify-content-between"><span>Retained Earnings</span><span id="bsEquity">KES 0</span></div>
+                    <hr><div class="d-flex justify-content-between fw-bold"><span>Total Equity</span><span id="bsTotalEquity">KES 0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Forecast -->
+    <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; margin-top: 30px; margin-bottom: 40px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Cash Flow Forecast</h3>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadForecast()"><i class="fas fa-chart-line"></i> Forecast next 30 days</button>
+        </div>
+        <p class="text-muted small">
+            Trend-based projection from your last 90 days of activity (needs at least a week of history to be meaningful).
+        </p>
+        <div id="forecastResults" style="display:none;">
+            <div class="row text-center mb-3">
+                <div class="col-4"><div class="small text-muted">Projected Income</div><div class="h5 text-success" id="fIncome">KES 0</div></div>
+                <div class="col-4"><div class="small text-muted">Projected Expense</div><div class="h5 text-danger" id="fExpense">KES 0</div></div>
+                <div class="col-4"><div class="small text-muted">Projected Net</div><div class="h5" id="fNet">KES 0</div></div>
+            </div>
+            <div class="chart-container" style="position: relative; height: 260px;">
+                <canvas id="forecastChart"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -195,6 +272,93 @@ function displayReport(data) {
                 <td class="${typeClass} text-end">KES ${t.amount.toLocaleString()}</td>
             </tr>`;
     });
+}
+
+function currentDateRange() {
+    if (currentPeriod === 'custom') {
+        return {
+            from_date: document.getElementById('from_date').value,
+            to_date: document.getElementById('to_date').value
+        };
+    }
+    const to = new Date();
+    const from = new Date();
+    const days = currentPeriod === 'daily' ? 1 : currentPeriod === 'weekly' ? 7 : 30;
+    from.setDate(from.getDate() - days);
+    return {
+        from_date: from.toISOString().slice(0, 10),
+        to_date: to.toISOString().slice(0, 10)
+    };
+}
+
+function loadProfitLoss() {
+    const range = currentDateRange();
+    const params = new URLSearchParams(range);
+    fetch(`/reports/api/profit-loss?${params.toString()}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || 'Could not generate P&L'); return; }
+            const s = data.statement;
+            document.getElementById('plResults').style.display = 'block';
+            document.getElementById('plRevenue').textContent = `KES ${s.revenue.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('plCogs').textContent = `KES ${s.cost_of_goods_sold.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('plGross').textContent = `KES ${s.gross_profit.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('plOpex').textContent = `KES ${s.operating_expenses.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('plInvPurchases').textContent = s.inventory_purchases_capitalized.toLocaleString(undefined, {maximumFractionDigits:0});
+            const netEl = document.getElementById('plNet');
+            netEl.textContent = `KES ${s.net_profit.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            netEl.className = 'h4 fw-bold ' + (s.net_profit >= 0 ? 'text-success' : 'text-danger');
+        });
+}
+
+function loadBalanceSheet() {
+    fetch('/reports/api/balance-sheet')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || 'Could not generate Balance Sheet'); return; }
+            const s = data.statement;
+            document.getElementById('bsResults').style.display = 'block';
+            document.getElementById('bsCash').textContent = `KES ${s.assets.cash_and_mpesa.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('bsInventory').textContent = `KES ${s.assets.inventory.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('bsTotalAssets').textContent = `KES ${s.assets.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('bsLiabilities').textContent = `KES ${s.liabilities.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('bsTotalLiabilities').textContent = `KES ${s.liabilities.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('bsEquity').textContent = `KES ${s.equity.retained_earnings.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('bsTotalEquity').textContent = `KES ${s.equity.total.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+        });
+}
+
+let forecastChart = null;
+function loadForecast() {
+    fetch('/reports/api/forecast?horizon_days=30&lookback_days=90')
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) { alert(data.error || 'Could not generate forecast'); return; }
+            const f = data.forecast;
+            document.getElementById('forecastResults').style.display = 'block';
+            document.getElementById('fIncome').textContent = `KES ${f.income.forecast.total_projected.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            document.getElementById('fExpense').textContent = `KES ${f.expense.forecast.total_projected.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            const netEl = document.getElementById('fNet');
+            const netTotal = f.net.forecast.total_projected;
+            netEl.textContent = `KES ${netTotal.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+            netEl.className = 'h5 ' + (netTotal >= 0 ? 'text-success' : 'text-danger');
+
+            if (forecastChart) forecastChart.destroy();
+            const labels = [...f.net.history.dates.slice(-30), ...f.net.forecast.dates];
+            const historyData = [...f.net.history.values.slice(-30), ...Array(f.net.forecast.dates.length).fill(null)];
+            const forecastData = [...Array(30).fill(null), ...f.net.forecast.values];
+            forecastChart = new Chart(document.getElementById('forecastChart'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Actual Net (last 30 days)', data: historyData, borderColor: '#0d6efd', spanGaps: false, tension: 0.3 },
+                        { label: 'Forecast Net', data: forecastData, borderColor: '#f5af19', borderDash: [6, 4], spanGaps: false, tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        });
 }
 
 function exportReport(format) {
