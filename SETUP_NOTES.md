@@ -53,6 +53,63 @@ verifies this signature before trusting any event, so it can't be spoofed.
 `requests` was added to `requirements.txt` since it's needed to call the
 Paystack API - run `pip install -r requirements.txt` again.
 
+## 8. Requirements cleanup, migrations, Docker, logo (this round)
+
+**Dependencies:** Removed `scipy`, `scikit-learn`, `shap`, `numba`/`llvmlite`,
+`matplotlib` and their sub-deps from `requirements.txt` — none were actually
+imported anywhere (the forecast service only uses `numpy.polyfit`, per its
+own docstring). This cut the installed footprint from ~500MB+ to ~250MB,
+which matters a lot for Vercel's serverless size limit.
+
+**Migrations:** `migrations/versions/` had never actually been used —
+`app/__init__.py` was calling `db.create_all()` on every boot, which quietly
+kept dev/local DBs in sync with `models.py` while masking the fact that no
+real Alembic migration existed. That meant a fresh Postgres deploy would be
+missing `inventory_items`, `liabilities`, `payment_requests`, and the new
+`transactions` columns entirely.
+
+Fixed by:
+- Removing the `db.create_all()` call from `create_app()`.
+- Generating a proper baseline migration (`migrations/versions/8e7a678056c4_initial_schema_baseline.py`) covering the full current schema.
+- Stamping the existing local `instance/ledgermate.db` as up to date (`flask db stamp head`) so your data isn't touched.
+
+**You need to, on any existing deployment (staging/prod) that isn't a brand
+new database:**
+```
+flask db stamp head
+```
+On a genuinely fresh database, just run:
+```
+flask db upgrade
+```
+Going forward, whenever you change `models.py`, run
+`flask db migrate -m "..."` and commit the generated file — don't rely on
+`create_all()` again.
+
+**SECRET_KEY bug found while testing Docker:** `ProductionConfig` has no
+fallback for `SECRET_KEY` (correct — you don't want a hardcoded prod secret),
+but that means the app 500s on *every* request if it's unset. Set
+`SECRET_KEY` in your environment (see `.env.example`). Same goes for
+`DATABASE_URL` and the Paystack keys.
+
+**Docker:** Added `Dockerfile` + `.dockerignore`. Build/run:
+```
+docker build -t ledgermate .
+docker run -p 8000:8000 \
+  -e SECRET_KEY=... \
+  -e DATABASE_URL=postgresql://... \
+  -e PAYSTACK_SECRET_KEY=... \
+  -e PAYSTACK_PUBLIC_KEY=... \
+  ledgermate
+```
+The container runs `flask db upgrade` automatically before starting
+gunicorn, so migrations always apply on deploy.
+
+**Logo:** It was rendering at 32px (26px on mobile) — way too small to read
+comfortably. Bumped to 52px desktop / 42px mobile in `main.css` /
+`mobile.css`, with a little extra header padding to match.
+
+
 ## 4. Profit & Loss / Balance Sheet
 - **P&L** groups your existing income/expense transactions by category over
   a date range into a standard Revenue / Expenses / Net Profit statement.

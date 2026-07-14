@@ -16,4 +16,4 @@ __pycache__/
 # Deployment & OS junk
 .vercel/
 .vercelignore
-.DS_Store
+.DS_Storevenv/
