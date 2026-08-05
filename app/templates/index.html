@@ -4,52 +4,132 @@
 
 {% block content %}
 <div class="landing-page">
-    <div class="hero-section" style="text-align: center; padding: 50px 20px;">
-        
+    <div class="hero-section">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LedgerMate" class="hero-logo">
         <h1 data-en="Welcome to LedgerMate" data-sw="Karibu kwa LedgerMate">Welcome to LedgerMate</h1>
-        <p data-en="Simple bookkeeping for Kenyan businesses" 
+        <p data-en="Simple bookkeeping for Kenyan businesses"
            data-sw="Uhasibu rahisi kwa biashara za Kenya">
             Simple bookkeeping for Kenyan businesses
         </p>
-        
+
         {% if not current_user.is_authenticated %}
-        <div style="margin-top: 30px;">
-            <a href="{{ url_for('auth.login') }}" class="btn btn-primary" 
+        <div class="hero-actions">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
+               data-en="Get Started Free" data-sw="Anza Bure">Get Started Free</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary"
                data-en="Login" data-sw="Ingia">Login</a>
-            <a href="{{ url_for('auth.register') }}" class="btn" 
-               style="background: #eee; margin-left: 10px;"
-               data-en="Register" data-sw="Jisajili">Register</a>
         </div>
         {% else %}
-        <div style="margin-top: 30px;">
+        <div class="hero-actions">
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary"
                data-en="Go to Dashboard" data-sw="Nenda kwa Dashibodi">Go to Dashboard</a>
         </div>
         {% endif %}
     </div>
-    
-    <div class="features" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; padding: 40px 20px;">
-        <div class="feature-card" style="text-align: center;">
-            <i class="fas fa-mobile-alt" style="font-size: 48px; color: #667eea;"></i>
+
+    <div class="demo-section">
+        <h2 data-en="See LedgerMate in action" data-sw="Ona LedgerMate ikifanya kazi">See LedgerMate in action</h2>
+        <p class="demo-subtitle" data-en="A 1-minute walkthrough of tracking transactions and generating reports"
+           data-sw="Ziara ya dakika 1 ya kufuatilia miamala na kutengeneza ripoti">
+            A 1-minute walkthrough of tracking transactions and generating reports
+        </p>
+        <div class="demo-video-wrapper">
+            <video controls preload="metadata" class="demo-video" poster="{{ url_for('static', filename='images/logo.png') }}">
+                <source src="{{ url_for('static', filename='videos/demo.webm') }}" type="video/webm">
+                Your browser doesn't support embedded video.
+                <a href="{{ url_for('static', filename='videos/demo.webm') }}">Download the demo</a> instead.
+            </video>
+        </div>
+    </div>
+
+    <div class="how-it-works">
+        <h2 data-en="How it works" data-sw="Jinsi inavyofanya kazi">How it works</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <i class="fas fa-plus-circle"></i>
+                <h3 data-en="Record" data-sw="Rekodi">Record</h3>
+                <p data-en="Log income and expenses as they happen, in seconds"
+                   data-sw="Andika mapato na matumizi yanapotokea, kwa sekunde">
+                    Log income and expenses as they happen, in seconds
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <i class="fas fa-tags"></i>
+                <h3 data-en="Categorize" data-sw="Ainisha">Categorize</h3>
+                <p data-en="Organize transactions and stock into clear categories"
+                   data-sw="Panga miamala na bidhaa katika makundi wazi">
+                    Organize transactions and stock into clear categories
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <i class="fas fa-chart-bar"></i>
+                <h3 data-en="Report" data-sw="Ripoti">Report</h3>
+                <p data-en="Generate profit & loss, balance sheet, and export to PDF/Excel"
+                   data-sw="Tengeneza faida na hasara, karatasi ya mizani, hamisha PDF/Excel">
+                    Generate profit &amp; loss, balance sheet, and export to PDF/Excel
+                </p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <i class="fas fa-magic"></i>
+                <h3 data-en="Forecast" data-sw="Tabiri">Forecast</h3>
+                <p data-en="See where your revenue is trending, months ahead"
+                   data-sw="Ona mwelekeo wa mapato yako, miezi mbeleni">
+                    See where your revenue is trending, months ahead
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <i class="fas fa-mobile-alt"></i>
             <h3 data-en="Mobile First" data-sw="Kwanza Simu">Mobile First</h3>
-            <p data-en="Designed for smartphones, and laptops" 
-               data-sw="Imeundwa kwa simu, inafanya kazi bila intaneti">
+            <p data-en="Designed for smartphones, and laptops"
+               data-sw="Imeundwa kwa simu na laptop">
                 Designed for smartphones, and laptops
             </p>
         </div>
-        
 
-        
-        <div class="feature-card" style="text-align: center;">
-            <i class="fas fa-chart-line" style="font-size: 48px; color: #667eea;"></i>
+        <div class="feature-card">
+            <i class="fas fa-chart-line"></i>
             <h3 data-en="Easy Reports" data-sw="Ripoti Rahisi">Easy Reports</h3>
-            <p data-en="Generate and export reports in PDF, CSV, Excel" 
+            <p data-en="Generate and export reports in PDF, CSV, Excel"
                data-sw="Tengeneza na hamisha ripoti kwa PDF, CSV, Excel">
                 Generate and export reports in PDF, CSV, Excel
             </p>
         </div>
-        
-        
+
+        <div class="feature-card">
+            <i class="fas fa-boxes"></i>
+            <h3 data-en="Inventory Tracking" data-sw="Ufuatiliaji wa Bidhaa">Inventory Tracking</h3>
+            <p data-en="Keep stock levels and movements up to date"
+               data-sw="Weka viwango vya bidhaa sawa">
+                Keep stock levels and movements up to date
+            </p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fas fa-credit-card"></i>
+            <h3 data-en="Automatic Payments" data-sw="Malipo ya Kiotomatiki">Automatic Payments</h3>
+            <p data-en="Accept Paystack payments, matched to your records automatically"
+               data-sw="Pokea malipo ya Paystack, yaliyolinganishwa kiotomatiki">
+                Accept Paystack payments, matched to your records automatically
+            </p>
+        </div>
     </div>
+
+    {% if not current_user.is_authenticated %}
+    <div class="cta-section">
+        <h2 data-en="Ready to simplify your bookkeeping?" data-sw="Uko tayari kurahisisha uhasibu wako?">
+            Ready to simplify your bookkeeping?
+        </h2>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
+           data-en="Create Free Account" data-sw="Fungua Akaunti Bure">Create Free Account</a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
