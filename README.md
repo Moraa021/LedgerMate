@@ -14,7 +14,6 @@ Small business owners, especially informal traders and SMEs in Kenya, often rely
 - **Forecasting** — lightweight, explainable revenue forecasting using linear regression over monthly totals (no black-box ML)
 - **Export** — download reports as PDF or CSV
 - **Payments** — accept payments via Paystack, with automatic transaction matching through signed webhooks (no manual entry needed)
-- **Multi-language support** — session-based language preference
 
 ## Tech Stack
 
