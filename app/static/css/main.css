@@ -632,3 +632,202 @@ body {
 #incomeExpenseChart {
     max-height: 100% !important;
 }
+/* ==========================================================================
+   Landing Page
+   ========================================================================== */
+
+.landing-page {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.hero-section {
+    text-align: center;
+    padding: 56px 20px 40px;
+}
+
+.hero-logo {
+    height: 64px;
+    width: auto;
+    margin-bottom: 20px;
+}
+
+.hero-section h1 {
+    font-size: 32px;
+    color: var(--dark-color);
+    margin-bottom: 12px;
+}
+
+.hero-section > p {
+    font-size: var(--font-large);
+    color: var(--gray-color);
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.hero-actions {
+    margin-top: 28px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background: var(--light-color);
+    color: var(--dark-color);
+}
+
+.btn-secondary:hover,
+.btn-secondary:active {
+    background: #dfe4e6;
+}
+
+/* Demo video */
+.demo-section {
+    text-align: center;
+    padding: 20px 20px 50px;
+}
+
+.demo-section h2 {
+    font-size: 26px;
+    color: var(--dark-color);
+    margin-bottom: 8px;
+}
+
+.demo-subtitle {
+    color: var(--gray-color);
+    margin-bottom: 24px;
+}
+
+.demo-video-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    background: var(--dark-color);
+}
+
+.demo-video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* How it works */
+.how-it-works {
+    padding: 30px 20px 50px;
+    text-align: center;
+}
+
+.how-it-works h2 {
+    font-size: 26px;
+    color: var(--dark-color);
+    margin-bottom: 30px;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+}
+
+.step-card {
+    position: relative;
+    background: var(--white);
+    border-radius: 15px;
+    padding: 30px 20px 24px;
+    box-shadow: var(--shadow);
+}
+
+.step-number {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: var(--white);
+    font-weight: 700;
+    font-size: var(--font-small);
+}
+
+.step-card i {
+    font-size: 32px;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+}
+
+.step-card h3 {
+    margin-bottom: 8px;
+    color: var(--dark-color);
+}
+
+.step-card p {
+    color: var(--gray-color);
+    font-size: var(--font-small);
+}
+
+/* Feature grid */
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+    padding: 10px 20px 50px;
+}
+
+.feature-card {
+    text-align: center;
+    background: var(--white);
+    border-radius: 15px;
+    padding: 30px 20px;
+    box-shadow: var(--shadow);
+}
+
+.feature-card i {
+    font-size: 40px;
+    color: var(--primary-color);
+    margin-bottom: 14px;
+}
+
+.feature-card h3 {
+    margin-bottom: 8px;
+    color: var(--dark-color);
+}
+
+.feature-card p {
+    color: var(--gray-color);
+    font-size: var(--font-small);
+}
+
+/* CTA */
+.cta-section {
+    text-align: center;
+    padding: 50px 20px 70px;
+    background: var(--light-color);
+    border-radius: 15px;
+    margin: 0 20px 40px;
+}
+
+.cta-section h2 {
+    color: var(--dark-color);
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+@media (max-width: 480px) {
+    .hero-section h1 {
+        font-size: 24px;
+    }
+    .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .hero-actions .btn {
+        width: 100%;
+    }
+}
