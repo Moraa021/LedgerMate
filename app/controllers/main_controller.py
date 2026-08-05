@@ -18,6 +18,10 @@ def index():
 def dashboard():
     return render_template('dashboard/dashboard.html')
 
+@bp.route('/health')
+def health():
+    return jsonify({"status": "healthy"})
+
 @bp.route('/api/dashboard/stats')
 @login_required
 def dashboard_stats():
