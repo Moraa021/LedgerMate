@@ -1,89 +1,125 @@
 {% extends "base.html" %}
 
-{% block title %}Get Paid{% endblock %}
+{% block title %}Get Paid Online - Paystack Payment Links - LedgerMate{% endblock %}
 
 {% block content %}
-<div class="page-header mb-2">
-    <h1 data-en="Get Paid" data-sw="Pokea Malipo">Get Paid</h1>
-    <p class="text-muted" data-en="Create a payment link and send it to your customer. Once they pay, it's recorded automatically - nothing to type in."
-       data-sw="Tengeneza kiungo cha malipo na umtumie mteja wako. Akilipa, inarekodiwa moja kwa moja.">
-        Create a payment link and send it to your customer. Once they pay, it's recorded automatically - nothing to type in.
-    </p>
-</div>
+<div class="form-page" style="max-width: 680px; margin: 0 auto; padding-top: var(--space-6);">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--slate-900); margin-bottom: 4px;" data-en="Create Payment Link" data-sw="Pokea Malipo">
+            💳 Create Payment Link
+        </h1>
+        <p style="color: var(--slate-500); font-size: var(--text-sm); margin-bottom: 0;"
+           data-en="Send a fast checkout link to your customer via WhatsApp or SMS. Once settled via M-Pesa or Card, it logs into your ledger automatically."
+           data-sw="Tengeneza kiungo cha malipo na umtumie mteja wako. Akilipa kwa M-Pesa au kadi, inarekodiwa moja kwa moja.">
+            Send a fast checkout link to your customer via WhatsApp or SMS. Once settled via M-Pesa or Card, it logs into your ledger automatically.
+        </p>
+    </div>
 
-<div class="card">
-    <form method="POST" id="paymentRequestForm">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <!-- Payment Request Form Card -->
+    <div class="card mb-8" style="box-shadow: var(--shadow-xl);">
+        <form method="POST" id="paymentRequestForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div class="form-group">
-            <label data-en="Amount (KES)" data-sw="Kiasi (KES)">Amount (KES)</label>
-            <input type="number" name="amount" class="form-control" step="0.01" min="1" required placeholder="0.00">
-        </div>
-
-        <div class="form-group">
-            <label data-en="What's this for?" data-sw="Hii ni ya nini?">What's this for?</label>
-            <input type="text" name="description" class="form-control" placeholder="e.g. Order #23, Haircut, Consultation">
-        </div>
-
-        <div class="form-group">
-            <label data-en="File under category" data-sw="Weka chini ya aina">File under category</label>
-            <select name="category_id" class="form-control">
-                <option value="">Auto (default sales category)</option>
-                {% for category in categories %}
-                <option value="{{ category.id }}">{{ category.icon or '📁' }} {{ category.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label data-en="Customer email (optional)" data-sw="Barua pepe ya mteja (si lazima)">Customer email (optional)</label>
-            <input type="email" name="customer_email" class="form-control" placeholder="customer@example.com">
-        </div>
-
-        <div class="form-group">
-            <label data-en="Customer name (optional)" data-sw="Jina la mteja (si lazima)">Customer name (optional)</label>
-            <input type="text" name="customer_name" class="form-control" placeholder="Jane Doe">
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block" id="generateLinkBtn">
-            <i class="fas fa-link"></i>
-            <span data-en="Generate Payment Link" data-sw="Tengeneza Kiungo cha Malipo">Generate Payment Link</span>
-        </button>
-    </form>
-</div>
-
-{% if recent_requests %}
-<div class="card">
-    <h3 class="mb-2" data-en="Recent Payment Links" data-sw="Viungo vya Hivi Karibuni">Recent Payment Links</h3>
-    <ul class="transaction-list">
-        {% for pr in recent_requests %}
-        <li class="transaction-item">
-            <div class="transaction-icon {{ 'income' if pr.status == 'success' else 'expense' }}">
-                <i class="fas {{ 'fa-check' if pr.status == 'success' else 'fa-clock' }}"></i>
+            <div class="form-group mb-4">
+                <label for="amount" class="form-label" data-en="Payment Amount (KES) *" data-sw="Kiasi (KES) *">Payment Amount (KES) *</label>
+                <div class="input-group">
+                    <span class="input-group-text">KES</span>
+                    <input type="number" 
+                           id="amount"
+                           name="amount" 
+                           class="form-control form-control-lg" 
+                           step="0.01" 
+                           min="1" 
+                           required 
+                           placeholder="0.00"
+                           style="font-weight: 700; font-size: 1.25rem;">
+                </div>
             </div>
-            <div class="transaction-details">
-                <div class="transaction-title">{{ pr.description or 'Payment request' }}</div>
-                <div class="transaction-meta">{{ pr.status|capitalize }} &middot; {{ pr.created_at.strftime('%d %b %Y') }}</div>
-            </div>
-            <div class="transaction-amount">KES {{ '%.2f'|format(pr.amount) }}</div>
-        </li>
-        {% endfor %}
-    </ul>
-</div>
-{% endif %}
 
-<style>
-    .page-header h1 { font-weight: 700; margin-bottom: 6px; }
-    .page-header .text-muted { color: var(--gray-color); font-size: var(--font-small); }
-</style>
+            <div class="form-group mb-4">
+                <label for="description" class="form-label" data-en="Service / Invoice Description *" data-sw="Hii ni ya nini? *">
+                    Service / Invoice Description *
+                </label>
+                <input type="text" 
+                       id="description"
+                       name="description" 
+                       class="form-control" 
+                       required
+                       placeholder="e.g. Website development milestone, Wholesale batch #44">
+            </div>
+
+            <div class="form-group mb-4">
+                <label for="category_id" class="form-label" data-en="File under category" data-sw="Weka chini ya aina">
+                    Ledger Category
+                </label>
+                <select name="category_id" id="category_id" class="form-select">
+                    <option value="">Auto-Assign (Default Sales)</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.icon or '📁' }} {{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="two-col mb-6">
+                <div class="form-group mb-0">
+                    <label for="customer_name" class="form-label" data-en="Customer Name (Optional)" data-sw="Jina la mteja">Customer Name</label>
+                    <input type="text" id="customer_name" name="customer_name" class="form-control" placeholder="e.g. Jane Mwangi">
+                </div>
+                <div class="form-group mb-0">
+                    <label for="customer_email" class="form-label" data-en="Customer Email (Optional)" data-sw="Barua pepe ya mteja">Customer Email</label>
+                    <input type="email" id="customer_email" name="customer_email" class="form-control" placeholder="customer@example.com">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="generateLinkBtn" style="box-shadow: 0 4px 14px var(--primary-glow);">
+                <i class="fas fa-link"></i>
+                <span data-en="Generate Secure Paystack Link" data-sw="Tengeneza Kiungo cha Malipo">Generate Secure Paystack Link</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Recent Payment Links -->
+    {% if recent_requests %}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title" data-en="Recent Generated Links" data-sw="Viungo vya Hivi Karibuni">Recent Generated Links</h3>
+            <span class="badge badge-info">History</span>
+        </div>
+        <div class="d-flex flex-direction-column gap-2" style="display: flex; flex-direction: column; gap: 8px;">
+            {% for pr in recent_requests %}
+            <div class="transaction-item">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="transaction-icon {{ 'income' if pr.status == 'success' else 'expense' }}" style="margin-right: 0;">
+                        <i class="fas {{ 'fa-check-circle' if pr.status == 'success' else 'fa-clock' }}" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="transaction-name">{{ pr.description or 'Payment link request' }}</div>
+                        <div class="transaction-time">
+                            <span class="badge {{ 'badge-success' if pr.status == 'success' else 'badge-warning' }}">{{ pr.status|capitalize }}</span>
+                            <span>&bull; {{ pr.created_at.strftime('%d %b %Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="transaction-amount amount-in">
+                    KES {{ '%.2f'|format(pr.amount) }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.getElementById('paymentRequestForm').addEventListener('submit', function() {
     const btn = document.getElementById('generateLinkBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Checkout Link...';
+    }
 });
 </script>
 {% endblock %}
