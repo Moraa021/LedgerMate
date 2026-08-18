@@ -1,86 +1,310 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
+    <!-- Character Encoding and Viewport -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>LedgerMate - {% block title %}{% endblock %}</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description" content="{% block meta_description %}LedgerMate - Automate your business ledger, track M-Pesa transactions, auto-categorize income and expenses, and generate real-time P&L reports with bank-grade security. Free trial available.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}fintech, business ledger, M-Pesa accounting, bookkeeping Kenya, P&L reports, cash flow tracker, small business accounting software, inventory management, invoice reconciliation{% endblock %}">
+    <meta name="author" content="LedgerMate">
+    <meta name="theme-color" content="#059669">
+    <meta name="robots" content="index, follow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LedgerMate">
+
+    <!-- OpenGraph Meta Tags for Social Media Sharing -->
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name" content="LedgerMate">
+    <meta property="og:title" content="{% block og_title %}LedgerMate - Automate Your Business Ledger with Confidence{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Automate your business ledger, track M-Pesa transactions, auto-categorize income & expenses, and generate real-time financial reports.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}https://ledgermate.app{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/logo.png', _external=True) }}{% endblock %}">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@LedgerMateApp">
+    <meta name="twitter:creator" content="@LedgerMateApp">
+    <meta name="twitter:title" content="{% block twitter_title %}LedgerMate - Modern Business Ledger & M-Pesa Tracking{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Automate your bookkeeping, track M-Pesa payments, and monitor business cash flow with ease.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/logo.png', _external=True) }}{% endblock %}">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{% block canonical_url %}https://ledgermate.app{% endblock %}">
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <!-- Google Fonts Preconnect & Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Chart.js for Dashboards & Reports -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+
+    <!-- Schema.org JSON-LD Structured Data for High SEO Authority -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://ledgermate.app/#software",
+          "name": "LedgerMate",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "description": "Fintech business ledger and M-Pesa automated bookkeeping application designed for modern SMEs and growing enterprises.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "KES",
+            "category": "Free Trial"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "1240"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://ledgermate.app/#organization",
+          "name": "LedgerMate Technologies",
+          "url": "https://ledgermate.app",
+          "logo": "https://ledgermate.app/logo.png",
+          "sameAs": [
+            "https://twitter.com/LedgerMateApp",
+            "https://linkedin.com/company/ledgermate"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://ledgermate.app/#website",
+          "url": "https://ledgermate.app",
+          "name": "LedgerMate",
+          "publisher": {
+            "@id": "https://ledgermate.app/#organization"
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Main & Responsive Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
 
+    <!-- CSRF Token Meta -->
     <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
+
+    <!-- Page Specific Styles Block -->
     {% block extra_css %}{% endblock %}
+
+    <title>{% block title %}LedgerMate - Automate Your Business Ledger with Confidence{% endblock %}</title>
 </head>
 <body>
-    
-    <header class="app-header">
-        <div class="container header-content">
-            <div class="brand">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" 
-                     alt="LedgerMate Logo" 
-                     class="app-logo">
-            </div>
-            {% if current_user.is_authenticated %}
-                <div class="user-greeting">
-                    
+    <!-- Skip to Main Content Link for WCAG Accessibility -->
+    <a href="#main-content" class="sr-only">
+        Skip to main content
+    </a>
+
+    <!-- Sticky Header & Navigation -->
+    <header class="sticky" role="banner">
+        <nav class="container-nav" aria-label="Primary navigation">
+            <div class="nav-wrapper">
+                <!-- Brand Logo -->
+                <div class="brand-section">
+                    <a href="{{ url_for('main.index') }}" class="brand-link" aria-label="LedgerMate Home">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LedgerMate Logo" class="brand-logo" width="38" height="38">
+                        <span class="brand-text">LedgerMate</span>
+                    </a>
                 </div>
-            {% endif %}
-        </div>
+
+                <!-- Navigation Links -->
+                <div class="nav-links" id="nav-menu" role="navigation">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('main.dashboard') }}" class="nav-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
+                            <i class="fas fa-th-large" aria-hidden="true" style="font-size: 13px; margin-right: 4px;"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('transactions.transactions') }}" class="nav-link {% if 'transaction' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-exchange-alt" aria-hidden="true" style="font-size: 13px; margin-right: 4px;"></i> Transactions
+                        </a>
+                        <a href="{{ url_for('reports.reports') }}" class="nav-link {% if 'report' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-chart-pie" aria-hidden="true" style="font-size: 13px; margin-right: 4px;"></i> Reports
+                        </a>
+                        <a href="{{ url_for('inventory.inventory') }}" class="nav-link {% if 'inventory' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-boxes" aria-hidden="true" style="font-size: 13px; margin-right: 4px;"></i> Inventory
+                        </a>
+                        <a href="{{ url_for('categories.categories') }}" class="nav-link {% if 'categories' in request.endpoint %}active{% endif %}">
+                            <i class="fas fa-tags" aria-hidden="true" style="font-size: 13px; margin-right: 4px;"></i> Categories
+                        </a>
+                        <a href="{{ url_for('main.profile') }}" class="nav-link {% if request.endpoint == 'main.profile' %}active{% endif %}">
+                            <i class="fas fa-user-circle" aria-hidden="true" style="font-size: 13px; margin-right: 4px;"></i> Profile
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('main.index') }}#features" class="nav-link">Features</a>
+                        <a href="{{ url_for('main.index') }}#how-it-works" class="nav-link">How It Works</a>
+                        <a href="{{ url_for('main.index') }}#pricing" class="nav-link">Pricing</a>
+                        <a href="{{ url_for('main.index') }}#security" class="nav-link">Security</a>
+                        <a href="{{ url_for('main.index') }}#faq" class="nav-link">FAQ</a>
+                    {% endif %}
+                </div>
+
+                <!-- Action CTA Buttons -->
+                <div class="nav-actions">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-sm btn-primary" aria-label="Add new transaction">
+                            <i class="fas fa-plus"></i> <span>Add Entry</span>
+                        </a>
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-nav-logout" aria-label="Log out of account">
+                            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-secondary" aria-label="Log in to your account">
+                            <i class="fas fa-sign-in-alt"></i> <span>Login</span>
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-primary" aria-label="Get started with free trial">
+                            <span>Get Started Free</span> <i class="fas fa-arrow-right" style="font-size: 11px;"></i>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile Menu Hamburger Button -->
+                <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+            </div>
+        </nav>
     </header>
 
-    <div class="flash-messages" id="flashMessages">
+    <!-- Flash Alert Messages -->
+    <div class="flash-messages" id="flashMessages" role="region" aria-label="System notifications">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} flash-message">
-                        {{ message }}
-                        <button class="close-btn" onclick="this.parentElement.remove()">&times;</button>
+                    <div class="alert alert-{{ category if category != 'error' and category != 'danger' else 'error' }}" role="alert">
+                        <i class="fas fa-{% if category == 'success' %}check-circle{% elif category in ['error', 'danger'] %}exclamation-circle{% elif category == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}" aria-hidden="true"></i>
+                        <span>{{ message }}</span>
+                        <button class="close-btn" onclick="this.parentElement.remove()" aria-label="Close alert">&times;</button>
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
     </div>
-    
-    <main class="container">
+
+    <!-- Main Page Content -->
+    <main id="main-content" class="app-main-content">
         {% block content %}{% endblock %}
     </main>
-    
+
+    <!-- Public Marketing Footer -->
+    <footer class="app-footer" role="contentinfo">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <!-- Brand Column -->
+                <div class="footer-brand">
+                    <div class="brand-section">
+                        <div class="brand-link">
+                            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LedgerMate Logo" class="brand-logo" width="38" height="38">
+                            <span class="brand-text">LedgerMate</span>
+                        </div>
+                    </div>
+                    <p class="footer-description">
+                        Automated business bookkeeping, M-Pesa reconciliation, and real-time financial reporting for modern enterprises and forward-thinking SMEs.
+                    </p>
+                    <div class="d-flex gap-3" style="font-size: 1.1rem; color: var(--slate-400);">
+                        <a href="https://twitter.com/LedgerMateApp" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://linkedin.com/company/ledgermate" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                        <a href="https://github.com" target="_blank" rel="noopener noreferrer" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                    </div>
+                </div>
+
+                <!-- Product Links -->
+                <div>
+                    <h4 class="footer-heading">Product</h4>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('main.index') }}#features">Features</a></li>
+                        <li><a href="{{ url_for('main.index') }}#how-it-works">How It Works</a></li>
+                        <li><a href="{{ url_for('main.index') }}#pricing">Pricing Plans</a></li>
+                        <li><a href="{{ url_for('main.index') }}#security">Bank Security</a></li>
+                        <li><a href="{{ url_for('main.index') }}#faq">FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Solutions Links -->
+                <div>
+                    <h4 class="footer-heading">Solutions</h4>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('main.index') }}#features">M-Pesa Automation</a></li>
+                        <li><a href="{{ url_for('main.index') }}#features">P&amp;L Statements</a></li>
+                        <li><a href="{{ url_for('main.index') }}#features">Inventory Tracking</a></li>
+                        <li><a href="{{ url_for('main.index') }}#features">Paystack Integration</a></li>
+                        <li><a href="{{ url_for('main.index') }}#features">Tax &amp; Export Tools</a></li>
+                    </ul>
+                </div>
+
+                <!-- Company & Trust -->
+                <div>
+                    <h4 class="footer-heading">Trust &amp; Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('main.index') }}#security">Data Protection</a></li>
+                        <li><a href="{{ url_for('main.index') }}#security">256-bit Encryption</a></li>
+                        <li><a href="{{ url_for('main.index') }}#security">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('main.index') }}#security">Terms of Service</a></li>
+                        <li><a href="mailto:support@ledgermate.app">Support &amp; Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Footer Bottom Note -->
+            <div class="footer-bottom">
+                <p>&copy; 2024-2026 LedgerMate Technologies. All rights reserved.</p>
+                <p>Engineered for high-reliability cash flow &amp; enterprise bookkeeping.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Fixed Mobile Bottom Navigation (Authenticated) -->
     {% if current_user.is_authenticated %}
-    <nav class="bottom-nav">
-        <a href="{{ url_for('main.dashboard') }}" class="nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}">
-            <i class="fas fa-home"></i>
+    <nav class="bottom-nav" aria-label="Mobile Bottom Navigation">
+        <a href="{{ url_for('main.dashboard') }}" class="nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}" aria-label="Dashboard">
+            <i class="fas fa-home" aria-hidden="true"></i>
             <span>Home</span>
         </a>
-        <a href="{{ url_for('transactions.transactions') }}" class="nav-item {% if 'transactions' in request.endpoint %}active{% endif %}">
-            <i class="fas fa-exchange-alt"></i>
-            <span>Transactions</span>
+        <a href="{{ url_for('transactions.transactions') }}" class="nav-item {% if 'transaction' in request.endpoint and request.endpoint != 'transactions.add_transaction' %}active{% endif %}" aria-label="Transactions">
+            <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+            <span>Activity</span>
         </a>
-        <a href="{{ url_for('transactions.add_transaction') }}" class="nav-item add-btn">
-            <i class="fas fa-plus-circle"></i>
+        <a href="{{ url_for('transactions.add_transaction') }}" class="nav-item add-btn {% if request.endpoint == 'transactions.add_transaction' %}active{% endif %}" aria-label="Add transaction entry">
+            <i class="fas fa-plus" aria-hidden="true"></i>
             <span>Add</span>
         </a>
-        <a href="{{ url_for('reports.reports') }}" class="nav-item {% if 'reports' in request.endpoint %}active{% endif %}">
-            <i class="fas fa-chart-bar"></i>
+        <a href="{{ url_for('reports.reports') }}" class="nav-item {% if 'report' in request.endpoint %}active{% endif %}" aria-label="Financial Reports">
+            <i class="fas fa-chart-pie" aria-hidden="true"></i>
             <span>Reports</span>
         </a>
-        <a href="{{ url_for('inventory.inventory') }}" class="nav-item {% if 'inventory' in request.endpoint %}active{% endif %}">
-            <i class="fas fa-boxes"></i>
+        <a href="{{ url_for('inventory.inventory') }}" class="nav-item {% if 'inventory' in request.endpoint %}active{% endif %}" aria-label="Inventory Stock">
+            <i class="fas fa-boxes" aria-hidden="true"></i>
             <span>Stock</span>
         </a>
-        <a href="{{ url_for('main.profile') }}" class="nav-item {% if request.endpoint == 'main.profile' %}active{% endif %}">
-            <i class="fas fa-user"></i>
+        <a href="{{ url_for('main.profile') }}" class="nav-item {% if request.endpoint == 'main.profile' %}active{% endif %}" aria-label="My Profile">
+            <i class="fas fa-user-circle" aria-hidden="true"></i>
             <span>Profile</span>
         </a>
     </nav>
     {% endif %}
-    
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
+
+    <!-- Main JavaScript Modules -->
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

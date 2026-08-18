@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, session, jsonify, request, flash, redirect, url_for
+from flask import Blueprint, render_template, session, jsonify, request, flash, redirect, url_for, Response
 from flask_login import login_required, current_user, logout_user
 from app.models import Transaction, Category
 from app.extensions import db
@@ -12,6 +12,50 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     return render_template('index.html')
+
+@bp.route('/robots.txt')
+def robots():
+    robots_content = """User-agent: *
+Allow: /
+Allow: /auth/login
+Allow: /auth/register
+Disallow: /dashboard
+Disallow: /transactions/
+Disallow: /reports/
+Disallow: /inventory/
+Disallow: /categories/
+Disallow: /profile
+Disallow: /api/
+
+Sitemap: https://ledgermate.app/sitemap.xml
+"""
+    return Response(robots_content, mimetype='text/plain')
+
+@bp.route('/sitemap.xml')
+def sitemap():
+    now_str = datetime.utcnow().strftime('%Y-%m-%d')
+    sitemap_xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ledgermate.app/</loc>
+    <lastmod>{now_str}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://ledgermate.app/auth/register</loc>
+    <lastmod>{now_str}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ledgermate.app/auth/login</loc>
+    <lastmod>{now_str}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>"""
+    return Response(sitemap_xml, mimetype='application/xml')
 
 @bp.route('/dashboard')
 @login_required
