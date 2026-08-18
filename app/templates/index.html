@@ -1,135 +1,510 @@
 {% extends "base.html" %}
 
-{% block title %}Welcome{% endblock %}
+{% block title %}LedgerMate - Automate Your Business Ledger & Cash Flow with Confidence{% endblock %}
+
+{% block meta_description %}Automate your business bookkeeping, reconcile M-Pesa statements instantly, track stock levels, and generate real-time Profit & Loss reports. Try LedgerMate free today.{% endblock %}
 
 {% block content %}
-<div class="landing-page">
-    <div class="hero-section">
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LedgerMate" class="hero-logo">
-        <h1 data-en="Welcome to LedgerMate" data-sw="Karibu kwa LedgerMate">Welcome to LedgerMate</h1>
-        <p data-en="Simple bookkeeping for Kenyan businesses"
-           data-sw="Uhasibu rahisi kwa biashara za Kenya">
-            Simple bookkeeping for Kenyan businesses
+<!-- Hero Section -->
+<section id="hero" class="hero-section" aria-labelledby="hero-title">
+    <div class="hero-container">
+        <div class="hero-content">
+            <!-- Main H1 Headline for SEO -->
+            <h1 id="hero-title" class="hero-headline">
+                Automate Your Ledger &amp; Business Cash Flow with Confidence
+            </h1>
+
+            <!-- Subheadline -->
+            <p class="hero-subheadline">
+                Seamlessly track M-Pesa transactions, auto-categorize income and expenses, manage inventory, and generate audit-ready financial statements in seconds. Zero manual entry headaches.
+            </p>
+
+            <!-- Hero Action Buttons -->
+            <div class="hero-cta-buttons">
+                {% if not current_user.is_authenticated %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg" aria-label="Start your 14-day free trial">
+                        <i class="fas fa-rocket" aria-hidden="true"></i> Start Free Trial
+                    </a>
+                    <button class="btn btn-secondary btn-lg" id="demo-btn" aria-label="Watch interactive 2-minute demo video">
+                        <i class="fas fa-play-circle" aria-hidden="true" style="color: var(--primary-color);"></i> Watch Demo
+                    </button>
+                {% else %}
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg" aria-label="Go directly to your dashboard">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i> Open Dashboard
+                    </a>
+                {% endif %}
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="trust-badges" role="region" aria-label="Security and verification highlights">
+                <div class="trust-badge">
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                    <span>256-Bit Bank Encryption</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
+                    <span>Instant M-Pesa Parsing</span>
+                </div>
+                <div class="trust-badge">
+                    <i class="fas fa-credit-card" aria-hidden="true"></i>
+                    <span>No Credit Card Required</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mock Dashboard Interactive Preview -->
+        <div class="hero-visual">
+            <div class="mock-dashboard" aria-label="LedgerMate Dashboard Interface Preview">
+                <div class="dashboard-header">
+                    <div class="header-title">
+                        <i class="fas fa-chart-pie" style="color: var(--primary-color); margin-right: 6px;"></i> Live Financial Snapshot
+                    </div>
+                    <div class="header-actions" aria-hidden="true">
+                        <div class="header-button" style="background-color: #f87171;"></div>
+                        <div class="header-button" style="background-color: #fbbf24;"></div>
+                        <div class="header-button" style="background-color: #34d399;"></div>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <!-- Top Balance Cards -->
+                    <div class="balance-cards">
+                        <div class="balance-card">
+                            <div class="balance-label">Total Income</div>
+                            <div class="balance-amount" style="color: var(--success-dark);">KES 245,320</div>
+                            <div class="balance-trend trend-up">
+                                <i class="fas fa-arrow-up" aria-hidden="true"></i> 14.8% vs last mo
+                            </div>
+                        </div>
+                        <div class="balance-card">
+                            <div class="balance-label">Expenses</div>
+                            <div class="balance-amount" style="color: var(--danger-dark);">KES 89,450</div>
+                            <div class="balance-trend trend-down">
+                                <i class="fas fa-arrow-down" aria-hidden="true"></i> 3.2% reduced
+                            </div>
+                        </div>
+                        <div class="balance-card highlight">
+                            <div class="balance-label">Net Profit</div>
+                            <div class="balance-amount" style="color: var(--primary-dark);">KES 155,870</div>
+                            <div class="balance-trend trend-up">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i> Healthy margin
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue Trend Bar Chart Visual -->
+                    <div class="chart-placeholder">
+                        <div class="chart-bars" aria-label="Monthly revenue bar chart">
+                            <div class="chart-bar" style="height: 45%;" title="Week 1"></div>
+                            <div class="chart-bar" style="height: 65%;" title="Week 2"></div>
+                            <div class="chart-bar" style="height: 50%;" title="Week 3"></div>
+                            <div class="chart-bar" style="height: 90%;" title="Week 4"></div>
+                            <div class="chart-bar" style="height: 75%;" title="Week 5"></div>
+                        </div>
+                        <div class="chart-label">Weekly Cash Flow Performance (KES)</div>
+                    </div>
+
+                    <!-- Recent Parsed Transactions Preview -->
+                    <div class="d-flex flex-direction-column gap-2" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div class="transaction-item" style="margin-bottom: 0; padding: 10px 14px; background: var(--slate-50);">
+                            <div class="transaction-icon income" style="width: 36px; height: 36px; font-size: 0.9rem; margin-right: 10px;">
+                                <i class="fas fa-mobile-alt" aria-hidden="true"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-name" style="font-size: 13px;">M-Pesa (QK89D2L19)</div>
+                                <div class="transaction-time" style="font-size: 11px;">Client Invoice Payment &bull; Today</div>
+                            </div>
+                            <div class="transaction-amount amount-in" style="font-size: 14px;">+ KES 12,500</div>
+                        </div>
+
+                        <div class="transaction-item" style="margin-bottom: 0; padding: 10px 14px; background: var(--slate-50);">
+                            <div class="transaction-icon expense" style="width: 36px; height: 36px; font-size: 0.9rem; margin-right: 10px;">
+                                <i class="fas fa-box" aria-hidden="true"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-name" style="font-size: 13px;">Stock Restock (Groceries)</div>
+                                <div class="transaction-time" style="font-size: 11px;">Supplier Settlement &bull; Yesterday</div>
+                            </div>
+                            <div class="transaction-amount amount-out" style="font-size: 14px;">- KES 4,800</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Core Features Section -->
+<section id="features" class="section-container" aria-labelledby="features-title">
+    <div class="section-header">
+        <h2 id="features-title" class="section-title">Built Specially for Fast-Moving Businesses</h2>
+        <p class="section-subtitle">Everything you need to master your cash flow, automate reconciliation, and make confident growth decisions.</p>
+    </div>
+
+    <div class="features-grid">
+        <!-- Feature 1 -->
+        <article class="feature-card">
+            <div class="feature-icon-wrapper">
+                <div class="feature-icon">
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
+                </div>
+            </div>
+            <h3 class="feature-title">Instant M-Pesa Parsing</h3>
+            <p class="feature-description">
+                Directly capture M-Pesa transaction reference codes and auto-extract amounts, timestamps, and customer details with zero transcription errors.
+            </p>
+        </article>
+
+        <!-- Feature 2 -->
+        <article class="feature-card">
+            <div class="feature-icon-wrapper">
+                <div class="feature-icon">
+                    <i class="fas fa-tags" aria-hidden="true"></i>
+                </div>
+            </div>
+            <h3 class="feature-title">Smart Categorization</h3>
+            <p class="feature-description">
+                Auto-classify sales, supplies, rent, wages, and utilities. Customize income and expense categories tailored to your industry workflow.
+            </p>
+        </article>
+
+        <!-- Feature 3 -->
+        <article class="feature-card">
+            <div class="feature-icon-wrapper">
+                <div class="feature-icon">
+                    <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
+                </div>
+            </div>
+            <h3 class="feature-title">Real-time P&amp;L Statements</h3>
+            <p class="feature-description">
+                Know your exact net profit, gross margins, and burn rate instantly. Eliminate end-of-month accounting stress forever.
+            </p>
+        </article>
+
+        <!-- Feature 4 -->
+        <article class="feature-card">
+            <div class="feature-icon-wrapper">
+                <div class="feature-icon">
+                    <i class="fas fa-boxes" aria-hidden="true"></i>
+                </div>
+            </div>
+            <h3 class="feature-title">Integrated Inventory</h3>
+            <p class="feature-description">
+                Track stock on hand, unit costs, selling prices, and reorder levels. Receive automatic low-stock alerts before items run out.
+            </p>
+        </article>
+
+        <!-- Feature 5 -->
+        <article class="feature-card">
+            <div class="feature-icon-wrapper">
+                <div class="feature-icon">
+                    <i class="fas fa-link" aria-hidden="true"></i>
+                </div>
+            </div>
+            <h3 class="feature-title">Paystack Payment Links</h3>
+            <p class="feature-description">
+                Generate secure online payment links to send customers over WhatsApp or SMS. Transactions automatically settle and log in your ledger.
+            </p>
+        </article>
+
+        <!-- Feature 6 -->
+        <article class="feature-card">
+            <div class="feature-icon-wrapper">
+                <div class="feature-icon">
+                    <i class="fas fa-file-export" aria-hidden="true"></i>
+                </div>
+            </div>
+            <h3 class="feature-title">1-Click Financial Exports</h3>
+            <p class="feature-description">
+                Export balance sheets, cash flow summaries, and ledger entries to PDF, CSV, or Excel for tax filing and banking partners.
+            </p>
+        </article>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="section-container" style="background: var(--white); border-top: 1px solid var(--slate-200); border-bottom: 1px solid var(--slate-200);" aria-labelledby="steps-title">
+    <div class="section-header">
+        <h2 id="steps-title" class="section-title">How LedgerMate Simplifies Your Bookkeeping</h2>
+        <p class="section-subtitle">Get started in under two minutes with three effortless steps.</p>
+    </div>
+
+    <div class="steps-grid">
+        <!-- Step 1 -->
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <div class="feature-icon" style="margin-bottom: var(--space-4);">
+                <i class="fas fa-user-plus" aria-hidden="true"></i>
+            </div>
+            <h3 class="step-title">Create Free Account</h3>
+            <p class="step-description">
+                Sign up with your phone number and business name. No credit card required, instant access to all core tools.
+            </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <div class="feature-icon" style="margin-bottom: var(--space-4);">
+                <i class="fas fa-exchange-alt" aria-hidden="true"></i>
+            </div>
+            <h3 class="step-title">Record Daily Activity</h3>
+            <p class="step-description">
+                Paste M-Pesa confirmation codes, record cash payments, generate payment links, and track inventory movements on the fly.
+            </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <div class="feature-icon" style="margin-bottom: var(--space-4);">
+                <i class="fas fa-chart-line" aria-hidden="true"></i>
+            </div>
+            <h3 class="step-title">View Insights &amp; Grow</h3>
+            <p class="step-description">
+                Watch your live dashboard generate profit charts, balance sheets, and tax-ready reports automatically.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Pricing Plans Section -->
+<section id="pricing" class="section-container" aria-labelledby="pricing-title">
+    <div class="section-header">
+        <h2 id="pricing-title" class="section-title">Transparent, Predictable Pricing</h2>
+        <p class="section-subtitle">Choose the perfect plan for your business stage. Upgrade, downgrade, or cancel anytime.</p>
+    </div>
+
+    <div class="pricing-grid">
+        <!-- Plan 1: Starter -->
+        <div class="pricing-card">
+            <h3 class="plan-name">Starter</h3>
+            <p class="plan-description">Ideal for sole proprietors, freelancers, and early-stage side hustles.</p>
+            <div class="plan-price">
+                <span class="price-currency">KES</span>
+                <span class="price-amount">0</span>
+                <span class="price-period">/ forever</span>
+            </div>
+            <ul class="plan-features">
+                <li><i class="fas fa-check" aria-hidden="true"></i> Up to 50 transactions/mo</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> M-Pesa reference tracking</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Basic P&amp;L summary</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Standard category management</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Mobile web access</li>
+            </ul>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-secondary btn-block btn-lg" aria-label="Get started free with Starter Plan">
+                Get Started Free
+            </a>
+        </div>
+
+        <!-- Plan 2: Pro (Featured) -->
+        <div class="pricing-card featured">
+            <div class="pricing-badge">Most Popular</div>
+            <h3 class="plan-name">Pro Business</h3>
+            <p class="plan-description">For growing shops, restaurants, service providers, and busy retail stores.</p>
+            <div class="plan-price">
+                <span class="price-currency">KES</span>
+                <span class="price-amount">1,999</span>
+                <span class="price-period">/ month</span>
+            </div>
+            <ul class="plan-features">
+                <li><i class="fas fa-check" aria-hidden="true"></i> <strong>Unlimited transactions</strong></li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Full inventory tracking &amp; alerts</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Paystack payment links</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> PDF, CSV &amp; Excel exports</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> AI forecasting &amp; cash flow trends</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Priority 24/7 support</li>
+            </ul>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-block btn-lg" aria-label="Subscribe to Pro Business Plan with free trial">
+                Start 14-Day Free Trial
+            </a>
+        </div>
+
+        <!-- Plan 3: Enterprise -->
+        <div class="pricing-card">
+            <h3 class="plan-name">Enterprise</h3>
+            <p class="plan-description">For multi-branch enterprises, wholesalers, and specialized accounting teams.</p>
+            <div class="plan-price">
+                <span class="price-currency">KES</span>
+                <span class="price-amount">4,999</span>
+                <span class="price-period">/ month</span>
+            </div>
+            <ul class="plan-features">
+                <li><i class="fas fa-check" aria-hidden="true"></i> Multi-branch consolidated ledgers</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Custom API &amp; ERP integrations</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Granular role-based permissions</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Dedicated account manager</li>
+                <li><i class="fas fa-check" aria-hidden="true"></i> Custom compliance &amp; tax reports</li>
+            </ul>
+            <a href="mailto:sales@ledgermate.app?subject=LedgerMate%20Enterprise%20Inquiry" class="btn btn-secondary btn-block btn-lg" aria-label="Contact sales for enterprise plan">
+                Contact Sales
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Bank-Grade Security Section -->
+<section id="security" class="section-container" style="background: var(--white); border-top: 1px solid var(--slate-200); border-bottom: 1px solid var(--slate-200);" aria-labelledby="security-title">
+    <div class="section-header">
+        <h2 id="security-title" class="section-title">Bank-Grade Protection for Your Financial Records</h2>
+        <p class="section-subtitle">We treat your accounting data with the highest international security and privacy protocols.</p>
+    </div>
+
+    <div class="security-grid">
+        <!-- Security Card 1 -->
+        <article class="security-card">
+            <div class="security-icon"><i class="fas fa-lock" aria-hidden="true"></i></div>
+            <h3 class="security-title">256-Bit AES Encryption</h3>
+            <p class="security-description">All data is encrypted in transit and at rest using bank-grade cryptographic standards.</p>
+        </article>
+
+        <!-- Security Card 2 -->
+        <article class="security-card">
+            <div class="security-icon"><i class="fas fa-shield-virus" aria-hidden="true"></i></div>
+            <h3 class="security-title">Daily Automated Backups</h3>
+            <p class="security-description">Continuous geographical backups guarantee your ledger records are never lost or corrupted.</p>
+        </article>
+
+        <!-- Security Card 3 -->
+        <article class="security-card">
+            <div class="security-icon"><i class="fas fa-user-shield" aria-hidden="true"></i></div>
+            <h3 class="security-title">Strict Privacy Guarantee</h3>
+            <p class="security-description">We never sell, monetize, or share your proprietary business transaction records with third parties.</p>
+        </article>
+
+        <!-- Security Card 4 -->
+        <article class="security-card">
+            <div class="security-icon"><i class="fas fa-certificate" aria-hidden="true"></i></div>
+            <h3 class="security-title">Regulatory Compliance</h3>
+            <p class="security-description">Engineered in compliance with Kenya Data Protection Act (KDPA) and international financial data privacy guidelines.</p>
+        </article>
+
+        <!-- Security Card 5 -->
+        <article class="security-card">
+            <div class="security-icon"><i class="fas fa-fingerprint" aria-hidden="true"></i></div>
+            <h3 class="security-title">Session Protection</h3>
+            <p class="security-description">Protected against brute-force attacks with rate limiting, secure cookies, and CSRF token verification.</p>
+        </article>
+
+        <!-- Security Card 6 -->
+        <article class="security-card">
+            <div class="security-icon"><i class="fas fa-server" aria-hidden="true"></i></div>
+            <h3 class="security-title">99.9% Uptime Guarantee</h3>
+            <p class="security-description">High-availability cloud infrastructure ensures your ledger is always accessible when you need it.</p>
+        </article>
+    </div>
+</section>
+
+<!-- Frequently Asked Questions (FAQ) Section for SEO -->
+<section id="faq" class="faq-section section-container" aria-labelledby="faq-title">
+    <div class="section-header">
+        <h2 id="faq-title" class="section-title">Frequently Asked Questions</h2>
+        <p class="section-subtitle">Everything you need to know about LedgerMate features, M-Pesa tracking, and subscriptions.</p>
+    </div>
+
+    <div class="faq-list">
+        <details class="faq-item" open>
+            <summary class="faq-question">
+                <span>How does LedgerMate track M-Pesa transactions?</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-answer">
+                When adding an entry or generating payment links with Paystack, you can input or receive the M-Pesa reference code (e.g. QK89D2L19). LedgerMate stores this metadata, eliminates duplicate entries, and connects it directly to your category reports.
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary class="faq-question">
+                <span>Can I export reports for my accountant or tax filing?</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-answer">
+                Yes! LedgerMate allows you to export Profit &amp; Loss statements, transaction histories, and Balance Sheets into PDF, CSV, and Excel with a single click.
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary class="faq-question">
+                <span>Is there a free trial for the Pro plan?</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-answer">
+                Yes! You can start a 14-day free trial of our Pro plan with no credit card required. You can also use our free Starter plan forever with basic bookkeeping tools.
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary class="faq-question">
+                <span>How does the inventory stock tracking work?</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-answer">
+                You can add inventory items with their unit cost, selling price, and reorder levels. When stock runs low, the system highlights items requiring restocking and calculates your total asset valuation in real time.
+            </div>
+        </details>
+
+        <details class="faq-item">
+            <summary class="faq-question">
+                <span>Can I access LedgerMate on my smartphone?</span>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+            <div class="faq-answer">
+                Absolutely. LedgerMate is built with a responsive web design and mobile-optimized touch controls, giving you a native app feel on iOS, Android, and tablets.
+            </div>
+        </details>
+    </div>
+</section>
+
+<!-- Final High-Conversion CTA Banner -->
+<section class="cta-final-section" aria-labelledby="cta-title">
+    <div class="cta-content">
+        <h2 id="cta-title" class="cta-headline">Ready to Transform Your Business Finances?</h2>
+        <p class="cta-subheadline">
+            Join thousands of modern businesses managing their bookkeeping with effortless automation and peace of mind.
         </p>
 
-        {% if not current_user.is_authenticated %}
-        <div class="hero-actions">
-            <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
-               data-en="Get Started Free" data-sw="Anza Bure">Get Started Free</a>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary"
-               data-en="Login" data-sw="Ingia">Login</a>
+        <div class="cta-buttons">
+            {% if not current_user.is_authenticated %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg" aria-label="Start your free trial today">
+                    <i class="fas fa-rocket" aria-hidden="true"></i> Start Free Trial Now
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg" aria-label="Log in to existing account">
+                    <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Member Login
+                </a>
+            {% else %}
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary btn-lg" aria-label="Return to your dashboard">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i> Return to Dashboard
+                </a>
+            {% endif %}
         </div>
-        {% else %}
-        <div class="hero-actions">
-            <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary"
-               data-en="Go to Dashboard" data-sw="Nenda kwa Dashibodi">Go to Dashboard</a>
-        </div>
-        {% endif %}
+        <p class="cta-footnote">14-Day Free Trial &bull; No Credit Card Required &bull; Cancel Anytime</p>
     </div>
+</section>
 
-    <div class="demo-section">
-        <h2 data-en="See LedgerMate in action" data-sw="Ona LedgerMate ikifanya kazi">See LedgerMate in action</h2>
-        <p class="demo-subtitle" data-en="A 1-minute walkthrough of tracking transactions and generating reports"
-           data-sw="Ziara ya dakika 1 ya kufuatilia miamala na kutengeneza ripoti">
-            A 1-minute walkthrough of tracking transactions and generating reports
-        </p>
-        <div class="demo-video-wrapper">
-            <video controls preload="metadata" class="demo-video" poster="{{ url_for('static', filename='images/logo.png') }}">
-                <source src="{{ url_for('static', filename='videos/demo.webm') }}" type="video/webm">
-                Your browser doesn't support embedded video.
-                <a href="{{ url_for('static', filename='videos/demo.webm') }}">Download the demo</a> instead.
-            </video>
+<!-- Demo Video Modal (Accessible) -->
+<div id="demo-modal" class="modal" style="display: none;" role="dialog" aria-labelledby="demo-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-content" style="max-width: 900px; padding: var(--space-4);">
+        <div class="modal-header" style="padding-bottom: var(--space-3); margin-bottom: var(--space-3);">
+            <div class="d-flex align-items-center gap-2">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LedgerMate" style="height: 28px; width: auto; object-fit: contain;">
+                <h3 id="demo-modal-title" style="margin-bottom: 0; font-size: 1.15rem;">LedgerMate Interactive Product Walkthrough</h3>
+            </div>
+            <button class="modal-close" id="modal-close" aria-label="Close demo video">&times;</button>
         </div>
-    </div>
-
-    <div class="how-it-works">
-        <h2 data-en="How it works" data-sw="Jinsi inavyofanya kazi">How it works</h2>
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <i class="fas fa-plus-circle"></i>
-                <h3 data-en="Record" data-sw="Rekodi">Record</h3>
-                <p data-en="Log income and expenses as they happen, in seconds"
-                   data-sw="Andika mapato na matumizi yanapotokea, kwa sekunde">
-                    Log income and expenses as they happen, in seconds
-                </p>
-            </div>
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <i class="fas fa-tags"></i>
-                <h3 data-en="Categorize" data-sw="Ainisha">Categorize</h3>
-                <p data-en="Organize transactions and stock into clear categories"
-                   data-sw="Panga miamala na bidhaa katika makundi wazi">
-                    Organize transactions and stock into clear categories
-                </p>
-            </div>
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <i class="fas fa-chart-bar"></i>
-                <h3 data-en="Report" data-sw="Ripoti">Report</h3>
-                <p data-en="Generate profit & loss, balance sheet, and export to PDF/Excel"
-                   data-sw="Tengeneza faida na hasara, karatasi ya mizani, hamisha PDF/Excel">
-                    Generate profit &amp; loss, balance sheet, and export to PDF/Excel
-                </p>
-            </div>
-            <div class="step-card">
-                <div class="step-number">4</div>
-                <i class="fas fa-magic"></i>
-                <h3 data-en="Forecast" data-sw="Tabiri">Forecast</h3>
-                <p data-en="See where your revenue is trending, months ahead"
-                   data-sw="Ona mwelekeo wa mapato yako, miezi mbeleni">
-                    See where your revenue is trending, months ahead
-                </p>
+        <div class="modal-body" style="padding: 0;">
+            <div style="position: relative; width: 100%; border-radius: var(--radius-lg); overflow: hidden; background: #000; box-shadow: var(--shadow-lg);">
+                <video 
+                    id="demo-video"
+                    controls 
+                    playsinline 
+                    preload="auto"
+                    style="width: 100%; height: auto; max-height: 72vh; display: block; background: #000;">
+                    <source src="{{ url_for('static', filename='videos/demo.webm') }}" type="video/webm">
+                    <source src="{{ url_for('static', filename='videos/Screencast from 2026-08-18 15-18-14.webm') }}" type="video/webm">
+                    Your browser does not support HTML5 video playback.
+                </video>
             </div>
         </div>
     </div>
-
-    <div class="features">
-        <div class="feature-card">
-            <i class="fas fa-mobile-alt"></i>
-            <h3 data-en="Mobile First" data-sw="Kwanza Simu">Mobile First</h3>
-            <p data-en="Designed for smartphones, and laptops"
-               data-sw="Imeundwa kwa simu na laptop">
-                Designed for smartphones, and laptops
-            </p>
-        </div>
-
-        <div class="feature-card">
-            <i class="fas fa-chart-line"></i>
-            <h3 data-en="Easy Reports" data-sw="Ripoti Rahisi">Easy Reports</h3>
-            <p data-en="Generate and export reports in PDF, CSV, Excel"
-               data-sw="Tengeneza na hamisha ripoti kwa PDF, CSV, Excel">
-                Generate and export reports in PDF, CSV, Excel
-            </p>
-        </div>
-
-        <div class="feature-card">
-            <i class="fas fa-boxes"></i>
-            <h3 data-en="Inventory Tracking" data-sw="Ufuatiliaji wa Bidhaa">Inventory Tracking</h3>
-            <p data-en="Keep stock levels and movements up to date"
-               data-sw="Weka viwango vya bidhaa sawa">
-                Keep stock levels and movements up to date
-            </p>
-        </div>
-
-        <div class="feature-card">
-            <i class="fas fa-credit-card"></i>
-            <h3 data-en="Automatic Payments" data-sw="Malipo ya Kiotomatiki">Automatic Payments</h3>
-            <p data-en="Accept Paystack payments, matched to your records automatically"
-               data-sw="Pokea malipo ya Paystack, yaliyolinganishwa kiotomatiki">
-                Accept Paystack payments, matched to your records automatically
-            </p>
-        </div>
-    </div>
-
-    {% if not current_user.is_authenticated %}
-    <div class="cta-section">
-        <h2 data-en="Ready to simplify your bookkeeping?" data-sw="Uko tayari kurahisisha uhasibu wako?">
-            Ready to simplify your bookkeeping?
-        </h2>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
-           data-en="Create Free Account" data-sw="Fungua Akaunti Bure">Create Free Account</a>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
