@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
 from app.models import InventoryItem, InventoryMovement
-from app.extensions import db
+from app.extensions import db, csrf
 from decimal import Decimal
 import uuid
 
@@ -34,6 +34,7 @@ def list_items():
 
 
 @bp.route('/api/add', methods=['POST'])
+@csrf.exempt
 @login_required
 def add_item():
     try:
@@ -58,6 +59,7 @@ def add_item():
 
 
 @bp.route('/api/<public_id>/movement', methods=['POST'])
+@csrf.exempt
 @login_required
 def add_movement(public_id):
     """Record a restock, sale, or manual adjustment against an item."""
@@ -102,6 +104,7 @@ def add_movement(public_id):
 
 
 @bp.route('/api/<public_id>/delete', methods=['POST'])
+@csrf.exempt
 @login_required
 def delete_item(public_id):
     item = InventoryItem.query.filter_by(public_id=public_id, user_id=current_user.id).first()

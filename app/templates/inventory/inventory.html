@@ -1,148 +1,299 @@
 {% extends "base.html" %}
 
-{% block title %}Inventory{% endblock %}
+{% block title %}Inventory Management - LedgerMate{% endblock %}
 
 {% block content %}
-<div class="page-header mb-2">
-    <h1 data-en="Inventory" data-sw="Bidhaa Dukani">Inventory</h1>
-</div>
+<div class="inventory-page">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--slate-900); margin-bottom: 4px;" data-en="Inventory &amp; Stock" data-sw="Bidhaa Dukani">
+                📦 Inventory &amp; Stock
+            </h1>
+            <p style="color: var(--slate-500); font-size: var(--text-sm); margin-bottom: 0;" data-en="Monitor stock on hand, valuation, margins, and reorder levels." data-sw="Fuatilia thamani na wingi wa bidhaa zilizopo.">
+                Monitor stock on hand, valuation, margins, and reorder levels.
+            </p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddItemModal()" aria-label="Add new inventory item">
+            <i class="fas fa-plus"></i> <span data-en="Add Product" data-sw="Ongeza Bidhaa">Add Product</span>
+        </button>
+    </div>
 
-<div class="summary-cards">
-    <div class="summary-card net">
-        <h3 data-en="Total Stock Value" data-sw="Thamani ya Bidhaa">Total Stock Value</h3>
-        <div class="amount" id="totalStockValue">KES 0</div>
+    <!-- Summary & Low Stock Notification -->
+    <div class="summary-cards" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: var(--space-6);">
+        <div class="summary-card net">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 data-en="Total Stock Valuation" data-sw="Thamani ya Bidhaa">Total Stock Valuation</h3>
+                <span class="badge badge-info">Asset Value</span>
+            </div>
+            <div class="amount" id="totalStockValue">KES 0</div>
+            <div class="amount-change">
+                <i class="fas fa-boxes" style="color: var(--slate-400);"></i>
+                <span data-en="Total inventory cost base" data-sw="Thamani ya jumla ya bidhaa">Total inventory cost base</span>
+            </div>
+        </div>
+
+        <div class="summary-card" id="stockStatusCard" style="border-color: var(--slate-200);">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 data-en="Stock Health" data-sw="Hali ya Bidhaa">Stock Health</h3>
+                <span class="badge badge-success" id="stockStatusBadge">Optimal</span>
+            </div>
+            <div class="amount" id="itemCountDisplay" style="font-size: 1.6rem;">0 Items</div>
+            <div class="amount-change" id="lowStockSummaryText">
+                <span>All items above reorder thresholds</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert Banner (Dynamic) -->
+    <div id="lowStockBanner" class="alert alert-warning hidden" style="margin-bottom: var(--space-6); box-shadow: var(--shadow-sm);">
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> 
+        <span id="lowStockText" style="flex: 1;"></span>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="filters-card mb-6">
+        <div class="search-box mb-0">
+            <div>
+                <i class="fas fa-search" aria-hidden="true"></i>
+                <input type="text" 
+                       id="itemSearchInput" 
+                       class="form-control" 
+                       placeholder="Search products by name, category, or SKU code..."
+                       aria-label="Search inventory">
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Items List Container -->
+    <div id="itemsList">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p style="margin-top: 12px; color: var(--slate-500); font-size: var(--text-sm);">Loading inventory catalog...</p>
+        </div>
     </div>
 </div>
-
-<div id="lowStockBanner" class="alert alert-warning hidden" style="position: static; margin-bottom: 20px;">
-    <i class="fas fa-exclamation-triangle"></i> <span id="lowStockText"></span>
-</div>
-
-<button class="btn btn-primary btn-block mb-2" onclick="openAddItemModal()">
-    <i class="fas fa-plus"></i> <span data-en="Add Item" data-sw="Ongeza Bidhaa">Add Item</span>
-</button>
-
-<div id="itemsList"></div>
 
 <!-- Add Item Modal -->
-<div class="modal" id="addItemModal" style="display:none;">
+<div class="modal" id="addItemModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 data-en="Add Inventory Item" data-sw="Ongeza Bidhaa">Add Inventory Item</h3>
-            <button class="modal-close" onclick="closeModal('addItemModal')">&times;</button>
+            <h3 id="addModalTitle" data-en="Add Inventory Product" data-sw="Ongeza Bidhaa Mpya">Add Inventory Product</h3>
+            <button class="modal-close" onclick="closeModal('addItemModal')" aria-label="Close dialog">&times;</button>
         </div>
-        <div class="form-group">
-            <label>Item Name</label>
-            <input type="text" id="itemName" class="form-control" placeholder="e.g. Sugar 2kg">
-        </div>
-        <div class="form-group">
-            <label>SKU (optional)</label>
-            <input type="text" id="itemSku" class="form-control" placeholder="e.g. SUG-002">
-        </div>
-        <div class="form-group">
-            <label>Category (optional)</label>
-            <input type="text" id="itemCategory" class="form-control" placeholder="e.g. Groceries">
-        </div>
-        <div class="form-group">
-            <label>Quantity on Hand</label>
-            <input type="number" id="itemQty" class="form-control" value="0" step="0.01">
-        </div>
-        <div class="form-group">
-            <label>Unit Cost (KES)</label>
-            <input type="number" id="itemCost" class="form-control" value="0" step="0.01">
-        </div>
-        <div class="form-group">
-            <label>Selling Price (KES)</label>
-            <input type="number" id="itemPrice" class="form-control" value="0" step="0.01">
-        </div>
-        <div class="form-group">
-            <label>Reorder Level</label>
-            <input type="number" id="itemReorder" class="form-control" value="5" step="0.01">
-        </div>
-        <button class="btn btn-primary btn-block" onclick="submitAddItem()">Save Item</button>
+        <div id="formError" class="alert alert-error" style="display:none; margin-bottom: 16px;"></div>
+        
+        <form id="addItemForm" onsubmit="submitAddItem(event)">
+            <div class="form-group">
+                <label for="itemName">Product / Item Name *</label>
+                <input type="text" id="itemName" class="form-control" placeholder="e.g. Basmati Rice 5kg" required>
+            </div>
+            
+            <div class="two-col">
+                <div class="form-group">
+                    <label for="itemSku">SKU / Barcode (Optional)</label>
+                    <input type="text" id="itemSku" class="form-control" placeholder="e.g. RIC-005">
+                </div>
+                <div class="form-group">
+                    <label for="itemCategory">Category</label>
+                    <input type="text" id="itemCategory" class="form-control" placeholder="e.g. Food &amp; Grains">
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label for="itemQty">Initial Quantity *</label>
+                    <input type="number" id="itemQty" class="form-control" value="0" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemReorder">Reorder Threshold</label>
+                    <input type="number" id="itemReorder" class="form-control" value="5" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="two-col">
+                <div class="form-group">
+                    <label for="itemCost">Cost Price (KES) *</label>
+                    <input type="number" id="itemCost" class="form-control" value="0" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="itemPrice">Selling Retail (KES) *</label>
+                    <input type="number" id="itemPrice" class="form-control" value="0" step="0.01" min="0" required>
+                </div>
+            </div>
+
+            <div class="modal-footer" style="padding-top: var(--space-4); margin-top: var(--space-2);">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addItemModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-check"></i> Save Product</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- Movement Modal -->
-<div class="modal" id="movementModal" style="display:none;">
+<!-- Stock Movement Modal -->
+<div class="modal" id="movementModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="movementItemName">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="movementItemName">Update Stock</h3>
-            <button class="modal-close" onclick="closeModal('movementModal')">&times;</button>
+            <h3 id="movementItemName">Update Stock Level</h3>
+            <button class="modal-close" onclick="closeModal('movementModal')" aria-label="Close dialog">&times;</button>
         </div>
         <input type="hidden" id="movementItemId">
+        
         <div class="form-group">
-            <label>Action</label>
-            <select id="movementType" class="form-control">
-                <option value="restock">Restock (add stock)</option>
-                <option value="sale">Sale (remove stock)</option>
-                <option value="adjustment">Adjustment (set exact quantity)</option>
+            <label for="movementType">Movement Action</label>
+            <select id="movementType" class="form-select">
+                <option value="restock">📥 Restock (Add units to inventory)</option>
+                <option value="sale">📤 Sale (Deduct sold units)</option>
+                <option value="adjustment">⚙️ Audit Adjustment (Set exact count)</option>
             </select>
         </div>
+
         <div class="form-group">
-            <label id="movementQtyLabel">Quantity</label>
-            <input type="number" id="movementQty" class="form-control" step="0.01" min="0">
+            <label id="movementQtyLabel" for="movementQty">Quantity to Add / Adjust *</label>
+            <input type="number" id="movementQty" class="form-control form-control-lg" step="0.01" min="0" placeholder="0.00" required>
         </div>
+
         <div class="form-group" id="movementCostGroup">
-            <label>New Unit Cost (optional, for restocks)</label>
-            <input type="number" id="movementCost" class="form-control" step="0.01">
+            <label for="movementCost">New Cost Price (Optional)</label>
+            <input type="number" id="movementCost" class="form-control" step="0.01" placeholder="Leave blank to keep existing cost">
         </div>
-        <button class="btn btn-primary btn-block" onclick="submitMovement()">Save</button>
+
+        <div class="modal-footer" style="padding-top: var(--space-4);">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('movementModal')">Cancel</button>
+            <button type="button" class="btn btn-primary" onclick="submitMovement()"><i class="fas fa-save"></i> Save Movement</button>
+        </div>
     </div>
 </div>
-
-<style>
-    .page-header h1 { font-weight: 700; }
-    .inventory-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
-    .inventory-item:last-child { border-bottom: none; }
-    .stock-badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
-    .stock-badge.low { background: rgba(231,76,60,0.15); color: var(--danger-color); }
-    .stock-badge.ok { background: rgba(46,204,113,0.15); color: var(--primary-color); }
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let items = [];
+let allItems = [];
 
-document.addEventListener('DOMContentLoaded', loadItems);
+document.addEventListener('DOMContentLoaded', function() {
+    loadItems();
+    
+    const searchInput = document.getElementById('itemSearchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            renderItems(this.value.trim().toLowerCase());
+        });
+    }
+});
 
 function loadItems() {
-    fetch('/inventory/api/list').then(r => r.json()).then(data => {
-        if (!data.success) return;
-        items = data.items;
-        document.getElementById('totalStockValue').textContent = `KES ${data.total_stock_value.toLocaleString()}`;
+    fetch('/inventory/api/list')
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            allItems = data.items || [];
+            
+            document.getElementById('totalStockValue').textContent = `KES ${Number(data.total_stock_value || 0).toLocaleString()}`;
+            document.getElementById('itemCountDisplay').textContent = `${allItems.length} SKU${allItems.length === 1 ? '' : 's'}`;
 
-        const banner = document.getElementById('lowStockBanner');
-        if (data.low_stock_count > 0) {
-            banner.classList.remove('hidden');
-            document.getElementById('lowStockText').textContent = `${data.low_stock_count} item(s) are low on stock and need reordering.`;
-        } else {
-            banner.classList.add('hidden');
-        }
+            const banner = document.getElementById('lowStockBanner');
+            const statusBadge = document.getElementById('stockStatusBadge');
+            const statusSummary = document.getElementById('lowStockSummaryText');
 
-        renderItems();
-    });
+            if (data.low_stock_count > 0) {
+                banner.classList.remove('hidden');
+                document.getElementById('lowStockText').textContent = `${data.low_stock_count} item(s) have dropped below reorder levels. Please restock soon.`;
+                statusBadge.className = 'badge badge-warning';
+                statusBadge.textContent = `${data.low_stock_count} Low Stock`;
+                statusSummary.innerHTML = `<span class="text-danger">⚠️ ${data.low_stock_count} items need immediate reorder</span>`;
+            } else {
+                banner.classList.add('hidden');
+                statusBadge.className = 'badge badge-success';
+                statusBadge.textContent = 'Optimal';
+                statusSummary.textContent = 'All products healthy';
+            }
+
+            renderItems();
+        })
+        .catch(err => {
+            console.error('Error loading inventory:', err);
+            document.getElementById('itemsList').innerHTML = `<div class="card text-center p-6 text-danger">Failed to load inventory.</div>`;
+        });
 }
 
-function renderItems() {
+function getCSRFToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+
+function renderItems(filterQuery = '') {
     const container = document.getElementById('itemsList');
-    if (items.length === 0) {
-        container.innerHTML = `<div class="card text-center"><i class="fas fa-boxes" style="font-size:40px;color:#ccc;"></i><p>No inventory items yet.</p></div>`;
+    
+    let filtered = allItems;
+    if (filterQuery) {
+        filtered = allItems.filter(i => 
+            (i.name || '').toLowerCase().includes(filterQuery) ||
+            (i.sku || '').toLowerCase().includes(filterQuery) ||
+            (i.category || '').toLowerCase().includes(filterQuery)
+        );
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="card text-center" style="padding: 50px 20px;">
+                <div class="transaction-icon" style="margin: 0 auto 16px; width: 64px; height: 64px; background: var(--slate-100); color: var(--slate-400); font-size: 1.75rem;">
+                    <i class="fas fa-boxes" aria-hidden="true"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--slate-800); margin-bottom: 6px;">
+                    ${filterQuery ? 'No Matching Products' : 'No Inventory Items Yet'}
+                </h3>
+                <p style="font-size: 14px; color: var(--slate-500); margin-bottom: 20px;">
+                    ${filterQuery ? 'Try clearing your search query.' : 'Add your catalog products to start tracking real-time stock levels.'}
+                </p>
+                ${!filterQuery ? `
+                <button class="btn btn-primary" onclick="openAddItemModal()" style="margin: 0 auto;">
+                    <i class="fas fa-plus"></i> <span>Add First Product</span>
+                </button>` : ''}
+            </div>`;
         return;
     }
-    let html = '<div class="card" style="padding: 0;">';
-    items.forEach(item => {
+
+    let html = '<div class="d-flex flex-direction-column gap-3" style="display: flex; flex-direction: column; gap: 10px;">';
+    filtered.forEach(item => {
+        const isLow = item.is_low_stock || item.quantity_on_hand <= (item.reorder_level || 5);
+        const margin = (item.unit_price && item.unit_cost && item.unit_cost > 0) 
+            ? Math.round(((item.unit_price - item.unit_cost) / item.unit_cost) * 100) 
+            : 0;
+
         html += `
-            <div class="inventory-item">
-                <div>
-                    <div style="font-weight:600;">${item.name} ${item.sku ? '<span style="color:#999;font-size:12px;">('+item.sku+')</span>' : ''}</div>
-                    <div style="font-size:13px;color:#888;">${item.category || 'Uncategorized'} &middot; KES ${item.unit_price.toLocaleString()} each</div>
-                </div>
-                <div style="text-align:right;">
-                    <div class="stock-badge ${item.is_low_stock ? 'low' : 'ok'}">${item.quantity_on_hand} in stock</div>
-                    <div style="margin-top:6px;">
-                        <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;" onclick="openMovementModal('${item.id}','${item.name.replace(/'/g,"")}')">Update</button>
+            <div class="card" style="padding: var(--space-4) var(--space-5);">
+                <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 12px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <strong style="font-size: 1.05rem; color: var(--slate-900);">${item.name}</strong>
+                            ${item.sku ? `<span style="font-family: var(--font-mono); font-size: 11px; background: var(--slate-100); padding: 2px 6px; border-radius: 4px; color: var(--slate-600);">${item.sku}</span>` : ''}
+                        </div>
+                        <div style="font-size: 12px; color: var(--slate-500); margin-top: 4px;">
+                            <span>${item.category || 'General Stock'}</span> &bull; 
+                            <span>Cost: KES ${Number(item.unit_cost || 0).toLocaleString()}</span> &bull; 
+                            <span>Retail: <strong>KES ${Number(item.unit_price || 0).toLocaleString()}</strong></span>
+                            ${margin > 0 ? `<span class="badge badge-success" style="margin-left: 6px; font-size: 10px;">+${margin}% margin</span>` : ''}
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-4">
+                        <div style="text-align: right;">
+                            <div class="badge ${isLow ? 'badge-danger' : 'badge-success'}" style="font-size: 12px; padding: 4px 10px;">
+                                ${Number(item.quantity_on_hand || 0).toLocaleString()} in stock
+                            </div>
+                            <div style="font-size: 11px; color: var(--slate-400); margin-top: 2px;">
+                                Value: KES ${Number((item.quantity_on_hand || 0) * (item.unit_cost || 0)).toLocaleString()}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary" onclick="openMovementModal('${item.public_id || item.id}', '${item.name.replace(/'/g, "\\'")}')" title="Adjust or restock quantity">
+                                <i class="fas fa-sync-alt"></i> <span>Stock</span>
+                            </button>
+                            <button class="btn btn-sm btn-secondary" style="color: var(--danger-color);" onclick="deleteItem('${item.public_id || item.id}', '${item.name.replace(/'/g, "\\'")}')" title="Remove product">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>`;
@@ -151,50 +302,154 @@ function renderItems() {
     container.innerHTML = html;
 }
 
-function openAddItemModal() { document.getElementById('addItemModal').style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function openAddItemModal() { 
+    document.getElementById('addItemForm').reset();
+    document.getElementById('formError').style.display = 'none';
+    document.getElementById('addItemModal').style.display = 'flex'; 
+}
 
-function submitAddItem() {
+function closeModal(id) { 
+    const modal = document.getElementById(id);
+    if (modal) modal.style.display = 'none';
+}
+
+function submitAddItem(event) {
+    event.preventDefault();
+    const formError = document.getElementById('formError');
+    formError.style.display = 'none';
+    
+    const itemName = document.getElementById('itemName').value.trim();
+    if (!itemName) {
+        formError.textContent = 'Item name is required';
+        formError.style.display = 'block';
+        return;
+    }
+    
     const payload = {
-        name: document.getElementById('itemName').value,
-        sku: document.getElementById('itemSku').value,
-        category: document.getElementById('itemCategory').value,
-        quantity_on_hand: document.getElementById('itemQty').value,
-        unit_cost: document.getElementById('itemCost').value,
-        unit_price: document.getElementById('itemPrice').value,
-        reorder_level: document.getElementById('itemReorder').value
+        name: itemName,
+        sku: document.getElementById('itemSku').value.trim(),
+        category: document.getElementById('itemCategory').value.trim(),
+        quantity_on_hand: parseFloat(document.getElementById('itemQty').value) || 0,
+        unit_cost: parseFloat(document.getElementById('itemCost').value) || 0,
+        unit_price: parseFloat(document.getElementById('itemPrice').value) || 0,
+        reorder_level: parseFloat(document.getElementById('itemReorder').value) || 5
     };
+    
     fetch('/inventory/api/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
         body: JSON.stringify(payload)
-    }).then(r => r.json()).then(data => {
-        if (data.success) { closeModal('addItemModal'); loadItems(); }
-        else alert(data.error || 'Could not add item');
+    })
+    .then(async response => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(data && data.error ? data.error : `Server error (${response.status})`);
+        }
+        return data;
+    })
+    .then(data => {
+        if (data && data.success) { 
+            closeModal('addItemModal'); 
+            loadItems();
+        } else {
+            formError.textContent = data && data.error ? data.error : 'Could not add item';
+            formError.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        formError.textContent = error.message;
+        formError.style.display = 'block';
     });
 }
 
 function openMovementModal(id, name) {
     document.getElementById('movementItemId').value = id;
-    document.getElementById('movementItemName').textContent = `Update: ${name}`;
+    document.getElementById('movementItemName').textContent = `Update Stock: ${name}`;
+    document.getElementById('movementQty').value = '';
+    document.getElementById('movementCost').value = '';
     document.getElementById('movementModal').style.display = 'flex';
 }
 
 function submitMovement() {
     const id = document.getElementById('movementItemId').value;
+    const qty = parseFloat(document.getElementById('movementQty').value);
+    
+    if (isNaN(qty) || qty <= 0) {
+        alert('Please enter a valid quantity greater than 0');
+        return;
+    }
+
     const payload = {
         movement_type: document.getElementById('movementType').value,
-        quantity: document.getElementById('movementQty').value,
-        unit_cost: document.getElementById('movementCost').value
+        quantity: qty,
+        unit_cost: document.getElementById('movementCost').value ? parseFloat(document.getElementById('movementCost').value) : null
     };
+    
     fetch(`/inventory/api/${id}/movement`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
         body: JSON.stringify(payload)
-    }).then(r => r.json()).then(data => {
-        if (data.success) { closeModal('movementModal'); loadItems(); }
-        else alert(data.error || 'Could not update stock');
+    })
+    .then(async response => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(data && data.error ? data.error : 'Failed to update stock');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data && data.success) { 
+            closeModal('movementModal'); 
+            loadItems();
+        } else {
+            alert(data && data.error ? data.error : 'Could not update stock');
+        }
+    })
+    .catch(error => {
+        alert(error.message);
     });
 }
+
+function deleteItem(id, name) {
+    if (!confirm(`Are you sure you want to delete product "${name}"?`)) {
+        return;
+    }
+    
+    fetch(`/inventory/api/${id}/delete`, {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(async response => {
+        const data = await response.json().catch(() => null);
+        if (!response.ok) {
+            throw new Error(data && data.error ? data.error : 'Delete failed');
+        }
+        return data;
+    })
+    .then(data => {
+        if (data && data.success) {
+            loadItems();
+        }
+    })
+    .catch(error => {
+        alert(error.message);
+    });
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal('addItemModal');
+        closeModal('movementModal');
+    }
+});
 </script>
 {% endblock %}
