@@ -1,151 +1,187 @@
 {% extends "base.html" %}
 
-{% block title %}Add Transaction{% endblock %}
+{% block title %}Add Transaction - LedgerMate{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="card shadow-sm border-0 mx-auto" style="max-width: 600px; border-radius: 15px;">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold m-0">New Transaction</h3>
-                <a href="{{ url_for('transactions.transactions') }}" class="btn-close" aria-label="Close"></a>
+<div class="form-page" style="max-width: 620px; margin: 0 auto; padding-top: var(--space-8);">
+    <div class="card" style="box-shadow: var(--shadow-xl);">
+        <div class="card-header" style="border-bottom: 1px solid var(--slate-100); padding-bottom: var(--space-4); margin-bottom: var(--space-6);">
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900); margin-bottom: 2px;">
+                    New Transaction Entry
+                </h1>
+                <p style="font-size: var(--text-xs); color: var(--slate-500); margin-bottom: 0;">
+                    Record income, operating expenses, and M-Pesa receipts.
+                </p>
             </div>
-            
-            <form method="POST" id="transactionForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                
-                <div class="mb-4">
-                    <label class="form-label d-block fw-bold small text-muted text-uppercase mb-2">Transaction Type</label>
-                    <div class="btn-group w-100" role="group">
-                        <input type="radio" class="btn-check" name="type" id="type_income" value="income" checked autocomplete="off">
-                        <label class="btn btn-outline-success py-2 fw-bold" for="type_income">
-                            <i class="fas fa-plus-circle me-1"></i> INCOME
-                        </label>
-
-                        <input type="radio" class="btn-check" name="type" id="type_expense" value="expense" autocomplete="off">
-                        <label class="btn btn-outline-danger py-2 fw-bold" for="type_expense">
-                            <i class="fas fa-minus-circle me-1"></i> EXPENSE
-                        </label>
-                    </div>
-                </div>
-
-                <div class="row g-3 mb-3">
-                    <div class="col-7">
-                        <label class="form-label fw-bold small text-uppercase">Amount (KES)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">Sh</span>
-                            <input type="number" name="amount" class="form-control form-control-lg border-start-0" step="0.01" required placeholder="0.00">
-                        </div>
-                    </div>
-                    <div class="col-5">
-                        <label class="form-label fw-bold small text-uppercase">Date</label>
-                        <input type="date" name="transaction_date" class="form-control form-control-lg" value="{{ today }}">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-uppercase">Category</label>
-                    <select name="category_id" id="categorySelect" class="form-select form-select-lg" required>
-                        <option value="" disabled selected>Choose a category...</option>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}" data-type="{{ category.type }}">
-                            {{ category.icon or '📁' }} {{ category.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-uppercase">Payment Method</label>
-                    <select name="payment_method" id="paymentMethod" class="form-select form-select-lg" required>
-                        <option value="cash">Cash</option>
-                        <option value="mpesa">M-Pesa</option>
-                        <option value="bank">Bank Transfer</option>
-                    </select>
-                </div>
-
-                <div class="mb-3 d-none animate__animated animate__fadeIn" id="mpesaGroup">
-                    <label class="form-label small fw-bold text-primary text-uppercase">M-Pesa Confirmation Code</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-primary text-white"><i class="fas fa-mobile-alt"></i></span>
-                        <input type="text" name="mpesa_code" id="mpesa_code" class="form-control border-primary" placeholder="e.g. RBT45X90" style="text-transform: uppercase;">
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-bold small text-uppercase">Description</label>
-                    <input type="text" name="description" class="form-control" placeholder="What was this for?">
-                </div>
-
-                <div class="mb-4">
-                    <label class="form-label fw-bold small text-uppercase text-muted">Additional Notes (Optional)</label>
-                    <textarea name="additional_info" class="form-control" rows="2" placeholder="Any extra details..."></textarea>
-                </div>
-
-                <button type="submit" class="btn btn-dark w-100 py-3 fw-bold shadow-sm rounded-pill">
-                    <i class="fas fa-check-circle me-2"></i>SAVE TRANSACTION
-                </button>
-            </form>
+            <a href="{{ url_for('transactions.transactions') }}" class="btn-close" aria-label="Cancel and close">&times;</a>
         </div>
+        
+        <form method="POST" id="transactionForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Type Selector Toggle -->
+            <div class="form-group mb-6">
+                <label class="form-label" style="text-align: center; margin-bottom: 8px;">Transaction Type</label>
+                <div class="btn-group" role="radiogroup" aria-label="Transaction Type">
+                    <input type="radio" class="btn-check" name="type" id="type_income" value="income" checked autocomplete="off">
+                    <label for="type_income" style="cursor: pointer;">
+                        <i class="fas fa-arrow-down" style="margin-right: 6px;"></i> INCOME / SALE
+                    </label>
+
+                    <input type="radio" class="btn-check" name="type" id="type_expense" value="expense" autocomplete="off">
+                    <label for="type_expense" style="cursor: pointer;">
+                        <i class="fas fa-arrow-up" style="margin-right: 6px;"></i> EXPENSE / COST
+                    </label>
+                </div>
+            </div>
+
+            <!-- Amount and Date in 2 columns -->
+            <div class="two-col mb-4">
+                <div class="form-group mb-0">
+                    <label for="amountInput" class="form-label">Amount (KES) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">KES</span>
+                        <input type="number" 
+                               id="amountInput"
+                               name="amount" 
+                               class="form-control form-control-lg" 
+                               step="0.01" 
+                               min="0.01"
+                               required 
+                               placeholder="0.00"
+                               style="font-weight: 700; font-size: 1.15rem;">
+                    </div>
+                </div>
+                <div class="form-group mb-0">
+                    <label for="dateInput" class="form-label">Transaction Date *</label>
+                    <input type="date" 
+                           id="dateInput"
+                           name="transaction_date" 
+                           class="form-control form-control-lg" 
+                           value="{{ today or '' }}"
+                           required>
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div class="form-group mb-4">
+                <label for="categorySelect" class="form-label">Category *</label>
+                <select name="category_id" id="categorySelect" class="form-select form-select-lg" required>
+                    <option value="" disabled selected>Select a category...</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" data-type="{{ category.type }}">
+                        {{ category.icon or '📁' }} {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="form-group mb-4">
+                <label for="paymentMethod" class="form-label">Payment Method *</label>
+                <select name="payment_method" id="paymentMethod" class="form-select form-select-lg" required>
+                    <option value="mpesa" selected>📱 M-Pesa</option>
+                    <option value="cash">💵 Cash</option>
+                    <option value="bank">🏦 Bank Transfer</option>
+                </select>
+            </div>
+
+            <!-- M-Pesa Code Input Field (Reactive) -->
+            <div class="form-group mb-4" id="mpesaGroup">
+                <label for="mpesa_code" class="form-label text-primary">M-Pesa Reference Code</label>
+                <div class="input-group">
+                    <span class="input-group-text" style="background: var(--primary-bg); color: var(--primary-color);">
+                        <i class="fas fa-mobile-alt"></i>
+                    </span>
+                    <input type="text" 
+                           name="mpesa_code" 
+                           id="mpesa_code" 
+                           class="form-control" 
+                           placeholder="e.g. QK89D2L19" 
+                           style="text-transform: uppercase; font-family: var(--font-mono); font-weight: 600; letter-spacing: 1px;">
+                </div>
+                <small style="color: var(--slate-500); font-size: 11px; margin-top: 4px; display: block;">
+                    Optional &bull; Paste the 10-character code from the M-Pesa SMS for instant audit trail.
+                </small>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group mb-4">
+                <label for="descriptionInput" class="form-label">Description / Item details</label>
+                <input type="text" 
+                       id="descriptionInput"
+                       name="description" 
+                       class="form-control" 
+                       placeholder="e.g. Bulk inventory supply, client design invoice, office rent">
+            </div>
+
+            <!-- Additional Notes -->
+            <div class="form-group mb-6">
+                <label for="notesInput" class="form-label text-muted">Additional Notes (Optional)</label>
+                <textarea id="notesInput" 
+                          name="additional_info" 
+                          class="form-control" 
+                          rows="2" 
+                          placeholder="Any extra customer details or receipt notes..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="box-shadow: 0 4px 14px var(--primary-glow);">
+                <i class="fas fa-check-circle" style="margin-right: 6px;"></i> SAVE TRANSACTION ENTRY
+            </button>
+        </form>
     </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Selectors
+    // Set default date to today if empty
+    const dateInput = document.getElementById('dateInput');
+    if (!dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+
     const typeRadios = document.querySelectorAll('input[name="type"]');
     const categorySelect = document.getElementById('categorySelect');
     const categoryOptions = categorySelect.querySelectorAll('option');
     const paymentMethodSelect = document.getElementById('paymentMethod');
     const mpesaGroup = document.getElementById('mpesaGroup');
-    const mpesaInput = document.getElementById('mpesa_code');
 
-    // --- Logic 1: Filter Categories by Type (Income/Expense) ---
     function filterCategories() {
-        const activeType = document.querySelector('input[name="type"]:checked').value;
-        categorySelect.value = ""; // Clear current selection
+        const checkedRadio = document.querySelector('input[name="type"]:checked');
+        const activeType = checkedRadio ? checkedRadio.value : 'income';
         
+        let hasSelectedOption = false;
         categoryOptions.forEach(opt => {
-            if (!opt.value) return; // Skip placeholder
+            if (!opt.value) return; // skip placeholder
             const optType = opt.getAttribute('data-type');
-            opt.style.display = (optType === activeType) ? 'block' : 'none';
+            if (optType === activeType) {
+                opt.style.display = 'block';
+                if (!hasSelectedOption) {
+                    opt.selected = true;
+                    hasSelectedOption = true;
+                }
+            } else {
+                opt.style.display = 'none';
+                if (opt.selected) opt.selected = false;
+            }
         });
     }
 
-    // --- Logic 2: Toggle M-Pesa Code Visibility ---
     function toggleMpesaField() {
         if (paymentMethodSelect.value === 'mpesa') {
-            mpesaGroup.classList.remove('d-none');
-            mpesaInput.setAttribute('required', 'true');
+            mpesaGroup.style.display = 'block';
         } else {
-            mpesaGroup.classList.add('d-none');
-            mpesaInput.removeAttribute('required');
-            mpesaInput.value = ""; // Clear if hidden
+            mpesaGroup.style.display = 'none';
         }
     }
 
-    // Event Listeners
     typeRadios.forEach(radio => radio.addEventListener('change', filterCategories));
     paymentMethodSelect.addEventListener('change', toggleMpesaField);
 
-    // Run on startup
     filterCategories();
     toggleMpesaField();
 });
 </script>
-
-<style>
-    /* Styling to make the form look modern */
-    .form-control-lg, .form-select-lg {
-        border-radius: 10px;
-        font-size: 1rem;
-    }
-    .btn-group .btn {
-        border-radius: 10px !important;
-        margin: 0 5px;
-    }
-    .card {
-        background: #fdfdfd;
-    }
-</style>
 {% endblock %}
