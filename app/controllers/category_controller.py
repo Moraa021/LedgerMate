@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, session
 from flask_login import login_required, current_user
 from app.models import Category, Transaction
-from app.extensions import db
+from app.extensions import db, csrf
 from datetime import datetime
 
 bp = Blueprint('categories', __name__, url_prefix='/categories')
@@ -54,6 +54,7 @@ def list_categories():
         }), 500
 
 @bp.route('/api/add', methods=['POST'])
+@csrf.exempt
 @login_required
 def add_category():
     """Add new category"""
@@ -120,6 +121,7 @@ def add_category():
         }), 500
 
 @bp.route('/api/<int:category_id>', methods=['PUT'])
+@csrf.exempt
 @login_required
 def update_category(category_id):
     """Update category"""
@@ -172,6 +174,7 @@ def update_category(category_id):
         }), 500
 
 @bp.route('/api/<int:category_id>', methods=['DELETE'])
+@csrf.exempt
 @login_required
 def delete_category(category_id):
     """Delete category"""
