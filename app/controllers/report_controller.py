@@ -4,7 +4,7 @@ from app.services.report_service import report_service
 from app.services.export_service import export_service
 from app.services.forecast_service import forecast_service
 from app.models import Liability
-from app.extensions import db
+from app.extensions import db, csrf
 from datetime import datetime, timedelta
 import io
 import uuid
@@ -288,6 +288,7 @@ def balance_sheet():
 
 
 @bp.route('/api/liabilities', methods=['GET', 'POST'])
+@csrf.exempt
 @login_required
 def liabilities():
     """List or add loans/payables used by the balance sheet"""
@@ -313,6 +314,7 @@ def liabilities():
 
 
 @bp.route('/api/liabilities/<public_id>/delete', methods=['POST'])
+@csrf.exempt
 @login_required
 def delete_liability(public_id):
     liability = Liability.query.filter_by(public_id=public_id, user_id=current_user.id).first()
