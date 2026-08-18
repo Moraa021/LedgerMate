@@ -1,81 +1,114 @@
 {% extends "base.html" %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Create Account - LedgerMate Free Trial{% endblock %}
+
+{% block meta_description %}Register for a LedgerMate account to automate your bookkeeping, track M-Pesa statements, manage stock, and create financial reports with zero manual entry.{% endblock %}
 
 {% block content %}
-<div class="auth-container" style="max-width: 400px; margin: 0 auto; padding: 20px;">
-    <h1 data-en="Create Account" data-sw="Unda Akaunti">Create Account</h1>
-    
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    
-    <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="form-group">
-            <label for="phone_number" data-en="Phone Number" data-sw="Nambari ya Simu">Phone Number</label>
-            <input type="tel" 
-                   class="form-control" 
-                   id="phone_number" 
-                   name="phone_number" 
-                   value="{{ request.form.get('phone_number', '') }}"
-                   required 
-                   pattern="[0-9]{10}" 
-                   placeholder="0712345678"
-                   data-en-placeholder="Enter phone number"
-                   data-sw-placeholder="Weka nambari ya simu">
-            <small style="color: #666;">Enter 10-digit phone number (e.g., 0712345678)</small>
+<div class="auth-page">
+    <div class="auth-card">
+        <!-- Auth Header -->
+        <div class="auth-header">
+            <a href="{{ url_for('main.index') }}" aria-label="LedgerMate Home" style="display: inline-block; text-decoration: none;">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LedgerMate Logo" class="brand-logo" style="height: 52px; margin: 0 auto 16px; width: auto; object-fit: contain;">
+            </a>
+            <h1 data-en="Create Free Account" data-sw="Unda Akaunti">Create Free Account</h1>
+            <p data-en="Start your 14-day trial &bull; No credit card required" data-sw="Anza bure bila kadi ya benki">
+                Start your 14-day trial &bull; No credit card required
+            </p>
         </div>
         
-        <div class="form-group">
-            <label for="business_name" data-en="Business Name (Optional)" data-sw="Jina la Biashara (Si lazima)">
-                Business Name (Optional)
-            </label>
-            <input type="text" 
-                   class="form-control" 
-                   id="business_name" 
-                   name="business_name"
-                   value="{{ request.form.get('business_name', '') }}"
-                   data-en-placeholder="Enter your business name"
-                   data-sw-placeholder="Weka jina la biashara yako">
-        </div>
+        <form method="POST" action="{{ url_for('auth.register') }}" class="auth-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group mb-4">
+                <label for="phone_number" class="form-label" data-en="Phone Number" data-sw="Nambari ya Simu">
+                    📱 Phone Number (10 Digits) *
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-phone-alt"></i></span>
+                    <input type="tel" 
+                           class="form-control form-control-lg" 
+                           id="phone_number" 
+                           name="phone_number" 
+                           value="{{ request.form.get('phone_number', '') }}"
+                           required 
+                           pattern="[0-9]{10}" 
+                           placeholder="0712345678"
+                           data-en-placeholder="e.g. 0712345678"
+                           data-sw-placeholder="Weka nambari ya simu"
+                           autofocus>
+                </div>
+                <small style="display:block; margin-top: 4px; color: var(--slate-500); font-size: 11px;">
+                    Used for logging into your account (e.g. 0712345678)
+                </small>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="business_name" class="form-label" data-en="Business Name (Optional)" data-sw="Jina la Biashara (Si lazima)">
+                    🏢 Business or Shop Name
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-store"></i></span>
+                    <input type="text" 
+                           class="form-control form-control-lg" 
+                           id="business_name" 
+                           name="business_name" 
+                           value="{{ request.form.get('business_name', '') }}"
+                           placeholder="e.g. Apex Hardware, Mama Mary Bakery"
+                           data-en-placeholder="e.g. Apex Hardware, Mama Mary Bakery"
+                           data-sw-placeholder="Weka jina la biashara yako">
+                </div>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="password" class="form-label" data-en="Password" data-sw="Nywila">
+                    🔐 Create Password (Min. 6 characters) *
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" 
+                           class="form-control form-control-lg" 
+                           id="password" 
+                           name="password" 
+                           required 
+                           minlength="6"
+                           placeholder="••••••••"
+                           data-en-placeholder="Create password"
+                           data-sw-placeholder="Unda nywila">
+                </div>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label for="confirm_password" class="form-label" data-en="Confirm Password" data-sw="Thibitisha Nywila">
+                    ✓ Confirm Password *
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-check"></i></span>
+                    <input type="password" 
+                           class="form-control form-control-lg" 
+                           id="confirm_password" 
+                           name="confirm_password" 
+                           required
+                           placeholder="••••••••"
+                           data-en-placeholder="Re-enter password"
+                           data-sw-placeholder="Thibitisha nywila">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block btn-lg" style="box-shadow: 0 4px 14px var(--primary-glow);">
+                <i class="fas fa-rocket"></i>
+                <span data-en="Create My Free Account" data-sw="Unda Akaunti">Create My Free Account</span>
+            </button>
+        </form>
         
-        <div class="form-group">
-            <label for="password" data-en="Password" data-sw="Nywila">Password</label>
-            <input type="password" 
-                   class="form-control" 
-                   id="password" 
-                   name="password" 
-                   required
-                   minlength="6"
-                   data-en-placeholder="Create password (min. 6 characters)"
-                   data-sw-placeholder="Unda nywila (herufi 6 au zaidi)">
+        <div class="auth-footer">
+            <p data-en="Already have an account?" data-sw="Tayari una akaunti?">Already have an account?</p>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-block" style="width: 100%;">
+                <i class="fas fa-sign-in-alt"></i>
+                <span data-en="Sign In Instead" data-sw="Ingia">Sign In Instead</span>
+            </a>
         </div>
-        
-        <div class="form-group">
-            <label for="confirm_password" data-en="Confirm Password" data-sw="Thibitisha Nywila">Confirm Password</label>
-            <input type="password" 
-                   class="form-control" 
-                   id="confirm_password" 
-                   name="confirm_password" 
-                   required
-                   data-en-placeholder="Confirm password"
-                   data-sw-placeholder="Thibitisha nywila">
-        </div>
-        
-        <button type="submit" class="btn btn-primary btn-block">
-            <i class="fas fa-user-plus"></i>
-            <span data-en="Register" data-sw="Jisajili">Register</span>
-        </button>
-    </form>
-    
-    <p style="text-align: center; margin-top: 20px;">
-        <span data-en="Already have an account?" data-sw="Tayari una akaunti?">Already have an account?</span>
-        <a href="{{ url_for('auth.login') }}" data-en="Login" data-sw="Ingia">Login</a>
-    </p>
+    </div>
 </div>
 {% endblock %}

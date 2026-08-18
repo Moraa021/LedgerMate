@@ -1,193 +1,226 @@
 {% extends "base.html" %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}Business Profile &amp; Settings - LedgerMate{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="profile-header shadow-sm" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 40px 20px; border-radius: 15px; margin-bottom: 25px; text-align: center;">
-        <div class="profile-avatar mb-3" style="position: relative; display: inline-block;">
-            <div style="width: 100px; height: 100px; background: white; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; border: 4px solid rgba(255,255,255,0.3);">
-                <span style="font-size: 40px; color: #667eea; font-weight: bold; text-transform: uppercase;">
-                    {# Use phone_number as primary identifier, fallback to business_name or email #}
-                    {% set display_name = current_user.business_name or current_user.email or current_user.phone_number or 'User' %}
-                    {{ display_name[0] | upper }}
-                </span>
-            </div>
+<div class="profile-page" style="max-width: 900px; margin: 0 auto;">
+    <!-- Profile Hero Card -->
+    <div class="profile-header-card shadow-md">
+        <div class="profile-avatar-circle">
+            {% set display_name = current_user.business_name or current_user.email or current_user.phone_number or 'U' %}
+            {{ display_name[0] | upper }}
         </div>
-        <h2 class="mb-1">{{ current_user.business_name or current_user.phone_number or current_user.email or 'User' }}</h2>
-        <p class="mb-2 opacity-75">{{ current_user.email or current_user.phone_number or 'No contact provided' }}</p>
+        <h2 style="color: var(--white); font-size: 1.75rem; font-weight: 800; margin-bottom: 4px;">
+            {{ current_user.business_name or 'My Business Ledger' }}
+        </h2>
+        <p style="color: var(--slate-300); font-size: var(--text-sm); margin-bottom: var(--space-4);">
+            {{ current_user.email or current_user.phone_number }}
+        </p>
         
-        <div class="d-flex justify-content-center gap-2 mt-2">
-            <span class="badge bg-white text-dark py-2 px-3">
-                <i class="fas fa-calendar-alt me-1"></i> Since {{ stats.member_since }}
+        <div class="d-flex justify-content-center gap-2" style="flex-wrap: wrap;">
+            <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: var(--white); padding: 6px 14px; font-size: 12px;">
+                <i class="fas fa-calendar-alt" style="margin-right: 4px;"></i> Member Since {{ stats.member_since if stats else '2024' }}
             </span>
-            <span class="badge bg-white text-dark py-2 px-3">
-                <i class="fas fa-phone me-1"></i> {{ current_user.phone_number or 'No phone' }}
+            <span class="badge" style="background: rgba(255, 255, 255, 0.15); color: var(--white); padding: 6px 14px; font-size: 12px;">
+                <i class="fas fa-phone" style="margin-right: 4px;"></i> {{ current_user.phone_number }}
             </span>
-            <a href="{{ url_for('main.logout') }}" class="btn btn-sm btn-light text-danger fw-bold">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4">
-            <div class="card h-100 border-0 shadow-sm text-center p-3">
-                <i class="fas fa-exchange-alt text-primary mb-2" style="font-size: 1.5rem;"></i>
-                <div class="small text-muted">Transactions</div>
-                <div class="h4 mb-0 font-weight-bold">{{ stats.total_transactions }}</div>
-            </div>
+    <!-- Quick Stat Tiles -->
+    <div class="summary-cards" style="margin-bottom: var(--space-6);">
+        <div class="stat-item">
+            <div class="stat-label">Total Transactions</div>
+            <div class="stat-value text-primary">{{ stats.total_transactions if stats else 0 }}</div>
+            <div class="stat-change">Recorded entries</div>
         </div>
-        <div class="col-6 col-md-4">
-            <div class="card h-100 border-0 shadow-sm text-center p-3">
-                <i class="fas fa-tags text-success mb-2" style="font-size: 1.5rem;"></i>
-                <div class="small text-muted">Categories</div>
-                <div class="h4 mb-0 font-weight-bold">{{ categories|length }}</div>
-            </div>
+        <div class="stat-item">
+            <div class="stat-label">Categories</div>
+            <div class="stat-value text-success">{{ categories|length if categories else 0 }}</div>
+            <div class="stat-change">Active streams</div>
         </div>
-        <div class="col-12 col-md-4">
-            <div class="card h-100 border-0 shadow-sm text-center p-3">
-                <i class="fas fa-wallet text-info mb-2" style="font-size: 1.5rem;"></i>
-                <div class="small text-muted">Net Balance</div>
-                <div class="h4 mb-0 font-weight-bold {% if stats.net_total >= 0 %}text-success{% else %}text-danger{% endif %}">
-                    {{ "{:,.0f}".format(stats.net_total) }} {{ current_user.currency or 'KES' }}
+        <div class="stat-item">
+            <div class="stat-label">Net Balance</div>
+            <div class="stat-value {{ 'text-success' if stats and stats.net_total >= 0 else 'text-danger' }}">
+                KES {{ "{:,.0f}".format(stats.net_total) if stats else '0' }}
+            </div>
+            <div class="stat-change">Overall standing</div>
+        </div>
+    </div>
+
+    <!-- Tabbed Settings Card -->
+    <div class="card mb-6">
+        <!-- Settings Tabs -->
+        <div class="report-tabs mb-6" id="profileTabs">
+            <button class="report-tab active" onclick="showTab(event, 'profile')">
+                <i class="fas fa-id-card"></i> <span>Business Details</span>
+            </button>
+            <button class="report-tab" onclick="showTab(event, 'categories')">
+                <i class="fas fa-tags"></i> <span>Category Rules</span>
+            </button>
+            <button class="report-tab" onclick="showTab(event, 'security')">
+                <i class="fas fa-lock"></i> <span>Password &amp; Security</span>
+            </button>
+        </div>
+
+        <!-- TAB 1: Profile Details -->
+        <div id="tab-profile" class="tab-pane-custom">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="update_profile">
+                
+                <div class="form-group mb-4">
+                    <label for="business_name" class="form-label">Business / Store Name</label>
+                    <input type="text" 
+                           id="business_name"
+                           name="business_name" 
+                           class="form-control form-control-lg" 
+                           value="{{ current_user.business_name or '' }}" 
+                           placeholder="e.g. Apex Hardware Store">
                 </div>
-            </div>
+                
+                <div class="form-group mb-4">
+                    <label for="email" class="form-label">Email Address (Optional)</label>
+                    <input type="email" 
+                           id="email"
+                           name="email" 
+                           class="form-control form-control-lg" 
+                           value="{{ current_user.email or '' }}" 
+                           placeholder="contact@mybusiness.com">
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label for="phone_number" class="form-label">Phone Number (Login Identifier)</label>
+                    <input type="tel" 
+                           id="phone_number"
+                           name="phone_number" 
+                           class="form-control form-control-lg" 
+                           value="{{ current_user.phone_number or '' }}" 
+                           readonly 
+                           style="background: var(--slate-100); color: var(--slate-500); cursor: not-allowed;">
+                    <small style="color: var(--slate-500); font-size: 11px; margin-top: 4px; display: block;">
+                        Your primary login phone number cannot be changed directly. Contact support for assistance.
+                    </small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save"></i> <span>Save Profile Updates</span>
+                </button>
+            </form>
         </div>
-    </div>
 
-    <div class="card border-0 shadow-sm overflow-hidden mb-4">
-        <div class="nav nav-tabs nav-fill bg-light" id="profileTabs">
-            <button class="nav-link active" onclick="showTab(event, 'profile')">Profile</button>
-            <button class="nav-link" onclick="showTab(event, 'categories')">Categories</button>
-            <button class="nav-link" onclick="showTab(event, 'security')">Security</button>
-        </div>
-
-        <div class="card-body p-4">
-            <div id="tab-profile" class="tab-pane-custom">
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="update_profile">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Business Name</label>
-                        <input type="text" name="business_name" class="form-control form-control-lg" value="{{ current_user.business_name or '' }}" placeholder="Enter business name">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Email Address</label>
-                        <input type="email" name="email" class="form-control form-control-lg" value="{{ current_user.email or '' }}" placeholder="Enter email address">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Phone Number</label>
-                        <input type="tel" name="phone_number" class="form-control form-control-lg" value="{{ current_user.phone_number or '' }}" placeholder="Enter phone number" readonly>
-                        <small class="text-muted">Phone number is used for login and cannot be changed</small>
-                    </div>
-                    <button type="submit" class="btn btn-primary px-4">Update Profile</button>
-                </form>
-            </div>
-
-            <div id="tab-categories" class="tab-pane-custom d-none">
-                <form method="POST" class="row g-2 mb-4 align-items-end">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="add_category">
-                    
-                    <div class="col-12 col-md-6">
-                        <label class="form-label small fw-bold">Category Name</label>
-                        <input type="text" name="category_name" class="form-control" placeholder="New category name..." required>
+        <!-- TAB 2: Categories -->
+        <div id="tab-categories" class="tab-pane-custom d-none">
+            <form method="POST" class="mb-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="add_category">
+                
+                <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--slate-900); margin-bottom: 12px;">
+                    Quick Add Category Stream
+                </h4>
+                
+                <div class="two-col mb-4">
+                    <div class="form-group mb-0">
+                        <label for="cat_name" class="form-label">Category Name *</label>
+                        <input type="text" id="cat_name" name="category_name" class="form-control" placeholder="e.g. Delivery, Supplies" required>
                     </div>
                     
-                    <div class="col-6 col-md-4">
-                        <label class="form-label small fw-bold">Type</label>
-                        <select name="category_type" class="form-select" required>
-                            <option value="" selected disabled>Choose...</option>
-                            <option value="expense">Expense</option>
-                            <option value="income">Income</option>
+                    <div class="form-group mb-0">
+                        <label for="cat_type" class="form-label">Type *</label>
+                        <select name="category_type" id="cat_type" class="form-select" required>
+                            <option value="expense" selected>Expense / Cost</option>
+                            <option value="income">Income / Revenue</option>
                         </select>
                     </div>
-                    
-                    <div class="col-6 col-md-2">
-                        <button type="submit" class="btn btn-success w-100">Add</button>
-                    </div>
-                </form>
-
-                <hr>
-
-                <div class="row row-cols-1 row-cols-md-3 g-4">
-                    {% for category in categories %}
-                    <div class="col">
-                        <div class="card h-100 border-0 shadow-sm text-center p-3">
-                            <div class="card-body">
-                                <div class="display-6 mb-2">{{ category.icon or '📁' }}</div>
-                                <h5 class="card-title text-truncate">{{ category.name }}</h5>
-                                
-                                <span class="badge {% if category.type == 'income' %}bg-success{% else %}bg-danger{% endif %} mb-3">
-                                    {{ category.type|upper }}
-                                </span>
-
-                                <form method="POST" onsubmit="return confirm('Delete this category?');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <input type="hidden" name="action" value="delete_category">
-                                    <input type="hidden" name="category_id" value="{{ category.id }}">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">
-                                        <i class="fas fa-trash-alt me-1"></i> Delete
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
                 </div>
-            </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> <span>Add Category</span>
+                </button>
+            </form>
 
-            <div id="tab-security" class="tab-pane-custom d-none">
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="change_password">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">New Password</label>
-                        <input type="password" id="new_password" name="new_password" class="form-control form-control-lg" required>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--space-3);">
+                {% for category in categories %}
+                <div class="card p-3" style="background: var(--slate-50); border: 1px solid var(--slate-200);">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span style="font-size: 1.25rem;">{{ category.icon or '📁' }}</span>
+                        <span class="badge {{ 'badge-success' if category.type == 'income' else 'badge-danger' }}">
+                            {{ category.type|upper }}
+                        </span>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Confirm New Password</label>
-                        <input type="password" id="confirm_password" class="form-control form-control-lg" required>
-                        <div id="passwordMatch" class="text-danger small d-none mt-1">Passwords do not match</div>
-                    </div>
-                    <button type="submit" id="updatePasswordBtn" class="btn btn-dark">Update Password</button>
-                </form>
+                    <strong style="color: var(--slate-900); font-size: 14px;">{{ category.name }}</strong>
+                    
+                    <form method="POST" onsubmit="return confirm('Delete this category?');" style="margin-top: 10px;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="delete_category">
+                        <input type="hidden" name="category_id" value="{{ category.id }}">
+                        <button type="submit" class="btn btn-sm btn-secondary w-100" style="color: var(--danger-color); font-size: 11px;">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
             </div>
+        </div>
+
+        <!-- TAB 3: Security & Password -->
+        <div id="tab-security" class="tab-pane-custom d-none">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="form-group mb-4">
+                    <label for="new_password" class="form-label">New Password (Min. 6 Characters) *</label>
+                    <input type="password" id="new_password" name="new_password" class="form-control form-control-lg" minlength="6" required placeholder="••••••••">
+                </div>
+                
+                <div class="form-group mb-6">
+                    <label for="confirm_password" class="form-label">Confirm New Password *</label>
+                    <input type="password" id="confirm_password" class="form-control form-control-lg" required placeholder="••••••••">
+                    <div id="passwordMatch" class="text-danger small d-none mt-2" style="font-size: 12px; font-weight: 600;">
+                        ⚠️ Passwords do not match
+                    </div>
+                </div>
+                
+                <button type="submit" id="updatePasswordBtn" class="btn btn-primary btn-lg">
+                    <i class="fas fa-key"></i> <span>Update Password</span>
+                </button>
+            </form>
         </div>
     </div>
 
-    <div class="mt-5 p-4 border rounded shadow-sm" style="background-color: #fff5f5; border-color: #feb2b2 !important;">
-        <h5 class="text-danger fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Danger Zone</h5>
-        <p class="text-muted small">Once you delete your account, there is no going back. All your transaction history, categories, and business settings will be permanently removed.</p>
-        <form id="deleteAccountForm" method="POST" action="{{ url_for('main.profile') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="action" value="delete_account">
-            <button type="button" class="btn btn-danger btn-sm" onclick="confirmDelete()">
-                <i class="fas fa-user-slash me-1"></i> Permanently Delete My Account
-            </button>
-        </form>
+    <!-- Danger Zone Card -->
+    <div class="card" style="background: var(--danger-bg); border-color: rgba(239, 68, 68, 0.3);">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 16px;">
+            <div>
+                <h4 style="color: var(--danger-dark); font-weight: 800; font-size: 1.1rem; margin-bottom: 4px;">
+                    <i class="fas fa-exclamation-triangle" style="margin-right: 6px;"></i> Danger Zone: Delete Account
+                </h4>
+                <p style="color: var(--slate-600); font-size: 13px; margin-bottom: 0;">
+                    Permanently delete your account, business records, inventory data, and transactions. This action cannot be reversed.
+                </p>
+            </div>
+            <form id="deleteAccountForm" method="POST" action="{{ url_for('main.profile') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="delete_account">
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                    <i class="fas fa-trash-alt"></i> <span>Delete My Account</span>
+                </button>
+            </form>
+        </div>
     </div>
 </div>
-
-<style>
-    .nav-tabs .nav-link.active {
-        background-color: white !important;
-        color: #667eea !important;
-        font-weight: bold;
-        border-bottom: 3px solid #667eea !important;
-    }
-    .tab-pane-custom { animation: fadeIn 0.3s ease-in-out; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-</style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 function showTab(event, tabName) {
     document.querySelectorAll('.tab-pane-custom').forEach(el => el.classList.add('d-none'));
-    document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tabName).classList.remove('d-none');
+    document.querySelectorAll('#profileTabs .report-tab').forEach(el => el.classList.remove('active'));
+    
+    const target = document.getElementById('tab-' + tabName);
+    if (target) target.classList.remove('d-none');
+    
     event.currentTarget.classList.add('active');
 }
 
@@ -197,7 +230,6 @@ function confirmDelete() {
     }
 }
 
-// Password validation
 const p1 = document.getElementById('new_password');
 const p2 = document.getElementById('confirm_password');
 const warn = document.getElementById('passwordMatch');
@@ -205,7 +237,7 @@ const btn = document.getElementById('updatePasswordBtn');
 
 if (p1 && p2) {
     [p1, p2].forEach(input => input.addEventListener('input', () => {
-        const mismatch = p2.value && p1.value !== p2.value;
+        const mismatch = Boolean(p2.value && p1.value !== p2.value);
         if (warn) {
             warn.classList.toggle('d-none', !mismatch);
         }
