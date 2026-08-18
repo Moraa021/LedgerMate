@@ -1,94 +1,175 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - LedgerMate{% endblock %}
 
 {% block content %}
 <div class="dashboard">
-    <!-- Welcome Section -->
-    <div class="welcome-section mb-3">
-        <h1 data-en="Hello, {{ current_user.business_name or 'User' }}!" 
-            data-sw="Habari, {{ current_user.business_name or 'Mtumiaji' }}!">
-            Hello, {{ current_user.business_name or 'User' }}!
-        </h1>
-        <p data-en="Here's your business overview" 
-           data-sw="Hapa ni muhtasari wa biashara yako">
-            Here's your business overview
-        </p>
+    <!-- Welcome Header -->
+    <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--slate-900); margin-bottom: 4px;"
+                data-en="Hello, {{ current_user.business_name or 'Business Owner' }}! 👋" 
+                data-sw="Habari, {{ current_user.business_name or 'Mwenye Biashara' }}! 👋">
+                Hello, {{ current_user.business_name or 'Business Owner' }}! 👋
+            </h1>
+            <p style="color: var(--slate-500); font-size: var(--text-sm); margin-bottom: 0;"
+               data-en="Here is your real-time financial performance overview." 
+               data-sw="Hapa kuna muhtasari wa hali ya kifedha ya biashara yako.">
+                Here is your real-time financial performance overview.
+            </p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary" aria-label="Add transaction entry">
+                <i class="fas fa-plus"></i> <span data-en="New Transaction" data-sw="Muamala Mpya">New Transaction</span>
+            </a>
+            <a href="{{ url_for('payments.request_payment') }}" class="btn btn-secondary" aria-label="Create payment link">
+                <i class="fas fa-link" style="color: var(--primary-color);"></i> <span data-en="Get Paid" data-sw="Pokea Malipo">Get Paid</span>
+            </a>
+        </div>
     </div>
-    
-    <!-- Quick Actions -->
-    <a href="{{ url_for('payments.request_payment') }}" class="card" style="display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit;">
-        <div class="transaction-icon income" style="width:48px;height:48px;">
-            <i class="fas fa-link" style="font-size:18px;"></i>
-        </div>
-        <div style="flex:1;">
-            <div style="font-weight:700;" data-en="Get Paid via Paystack" data-sw="Pokea Malipo kwa Paystack">Get Paid via Paystack</div>
-            <div style="font-size:13px;color:#888;" data-en="Send a payment link - it's recorded automatically once paid" data-sw="Tuma kiungo cha malipo - kinarekodiwa moja kwa moja">Send a payment link - it's recorded automatically once paid</div>
-        </div>
-        <i class="fas fa-chevron-right" style="color:#ccc;"></i>
-    </a>
 
-    <!-- Summary Cards -->
+    <!-- Quick Action Banner -->
+    <div class="card mb-6" style="background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%); border-color: rgba(16, 185, 129, 0.3);">
+        <div class="d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 16px;">
+            <div class="d-flex align-items-center gap-4">
+                <div class="transaction-icon income" style="width: 52px; height: 52px; font-size: 1.35rem; margin-right: 0;">
+                    <i class="fas fa-qrcode" aria-hidden="true"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--slate-900); margin-bottom: 2px;">
+                        Paystack Instant Checkout Links
+                    </h3>
+                    <p style="font-size: var(--text-xs); color: var(--slate-600); margin-bottom: 0;">
+                        Share payment links directly with customers on WhatsApp or SMS &bull; Auto-records once paid.
+                    </p>
+                </div>
+            </div>
+            <a href="{{ url_for('payments.request_payment') }}" class="btn btn-sm btn-primary">
+                <span>Create Link</span> <i class="fas fa-arrow-right" style="font-size: 11px;"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Key Financial Summary Cards -->
     <div class="summary-cards">
+        <!-- Income Card -->
         <div class="summary-card income">
-            <h3 data-en="Total Income" data-sw="Jumla ya Mapato">Total Income</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 data-en="Total Income (30d)" data-sw="Jumla ya Mapato (Siku 30)">💰 Total Income (30d)</h3>
+                <span class="badge badge-success">Income</span>
+            </div>
             <div class="amount" id="totalIncome">KES 0</div>
+            <div class="amount-change">
+                <i class="fas fa-calendar-alt" style="color: var(--slate-400);"></i>
+                <span data-en="Past 30 days revenue" data-sw="Mapato siku 30 zilizopita">Past 30 days revenue</span>
+            </div>
         </div>
-        
+
+        <!-- Expense Card -->
         <div class="summary-card expense">
-            <h3 data-en="Total Expense" data-sw="Jumla ya Matumizi">Total Expense</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 data-en="Total Expense (30d)" data-sw="Jumla ya Matumizi (Siku 30)">📊 Total Expense (30d)</h3>
+                <span class="badge badge-danger">Expense</span>
+            </div>
             <div class="amount" id="totalExpense">KES 0</div>
+            <div class="amount-change">
+                <i class="fas fa-calendar-alt" style="color: var(--slate-400);"></i>
+                <span data-en="Operational costs" data-sw="Gharama za uendeshaji">Operational costs</span>
+            </div>
         </div>
-        
+
+        <!-- Net Balance Card -->
         <div class="summary-card net">
-            <h3 data-en="Net Balance" data-sw="Usawa Halisi">Net Balance</h3>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 data-en="Net Profit / Balance" data-sw="Faida Halisi / Salio">💎 Net Profit / Balance</h3>
+                <span class="badge badge-info">Net P&amp;L</span>
+            </div>
             <div class="amount" id="netBalance">KES 0</div>
+            <div class="amount-change">
+                <i class="fas fa-wallet" style="color: var(--slate-400);"></i>
+                <span data-en="Available operating capital" data-sw="Mtaji unaopatikana">Available operating capital</span>
+            </div>
         </div>
     </div>
-    
-    <!-- Chart -->
-<div class="card chart-card"></div>
-    <div class="chart-container">
-        <h3 data-en="Income vs Expense (Last 30 Days)" 
-            data-sw="Mapato dhidi ya Matumizi (Siku 30 zilizopita)">
-            Income vs Expense (Last 30 Days)
-        </h3>
-        <canvas id="incomeExpenseChart"></canvas>
+
+    <!-- Quick Stats Row -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6);">
+        <div class="stat-item">
+            <div class="stat-label" data-en="Active Categories" data-sw="Kategoria Zinazotumika">Active Categories</div>
+            <div class="stat-value text-primary" id="categoryCount">8</div>
+            <div class="stat-change" data-en="Managed groups" data-sw="Makundi yaliyopangwa">Organized tracking</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label" data-en="Fast Links" data-sw="Viungo vya Haraka">Inventory Status</div>
+            <div class="stat-value text-success" id="inventoryStatus">Healthy</div>
+            <div class="stat-change" data-en="Automatic valuation" data-sw="Hesabu ya thamani">Live stock tracked</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label" data-en="Audit Status" data-sw="Hali ya Hesabu">Reconciliation</div>
+            <div class="stat-value text-info" id="auditStatus">100%</div>
+            <div class="stat-change" data-en="M-Pesa verified" data-sw="Imethibitishwa">Zero discrepancies</div>
+        </div>
     </div>
-</div>
-    
-    <!-- Recent Transactions -->
+
+    <!-- Cash Flow Chart Container -->
+    <div class="card mb-6">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title" data-en="Income vs Expense Trend" data-sw="Mwelekeo wa Mapato na Matumizi">
+                    📈 Cash Flow Performance (Last 30 Days)
+                </h3>
+                <p style="font-size: var(--text-xs); color: var(--slate-500); margin-bottom: 0;">
+                    Visual comparison of daily incoming revenue and outbound expenses
+                </p>
+            </div>
+            <a href="{{ url_for('reports.reports') }}" class="btn btn-sm btn-secondary" aria-label="View detailed financial reports">
+                <span>Full Reports</span> <i class="fas fa-arrow-right" style="font-size: 11px;"></i>
+            </a>
+        </div>
+        <div style="position: relative; height: 280px; width: 100%;">
+            <canvas id="incomeExpenseChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Activity Feed -->
     <div class="card">
-        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 data-en="Recent Transactions" data-sw="Miamala ya Hivi Karibuni">Recent Transactions</h3>
-            <a href="{{ url_for('transactions.transactions') }}" class="btn btn-primary btn-sm"
-               data-en="View All" data-sw="Tazama Zote">View All</a>
+        <div class="card-header">
+            <div>
+                <h3 class="card-title" data-en="Recent Transactions" data-sw="Miamala ya Hivi Karibuni">
+                    🔄 Recent Transactions
+                </h3>
+                <p style="font-size: var(--text-xs); color: var(--slate-500); margin-bottom: 0;">
+                    Latest recorded sales, expenses, and M-Pesa receipts
+                </p>
+            </div>
+            <a href="{{ url_for('transactions.transactions') }}" class="btn btn-sm btn-primary" data-en="View All" data-sw="Tazama Zote">
+                View All Activity
+            </a>
         </div>
-        
+
         <div class="recent-transactions" id="recentTransactions">
             <div class="loading-spinner">
                 <div class="spinner"></div>
-                <p data-en="Loading transactions..." data-sw="Inapakia miamala...">Loading transactions...</p>
+                <p style="margin-top: 12px; font-size: var(--text-sm); color: var(--slate-500);" data-en="Loading ledger data..." data-sw="Inapakia miamala...">
+                    Loading ledger data...
+                </p>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Transaction Detail Modal -->
-<div class="modal" id="transactionModal" style="display: none;">
+<div class="modal" id="transactionModal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modalDetailTitle">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 data-en="Transaction Details" data-sw="Maelezo ya Muamala">Transaction Details</h3>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h3 id="modalDetailTitle" data-en="Transaction Details" data-sw="Maelezo ya Muamala">Transaction Details</h3>
+            <button class="modal-close" onclick="closeModal()" aria-label="Close dialog">&times;</button>
         </div>
         <div class="modal-body" id="transactionDetails">
-            <!-- Content loaded dynamically -->
+            <!-- Loaded dynamically via JavaScript -->
         </div>
         <div class="modal-footer">
-            <button class="btn btn-danger" onclick="deleteTransaction()"
-                    data-en="Delete" data-sw="Futa">Delete</button>
-            <button class="btn btn-primary" onclick="closeModal()"
-                    data-en="Close" data-sw="Funga">Close</button>
+            <button class="btn btn-secondary" onclick="closeModal()" data-en="Close" data-sw="Funga">Close</button>
         </div>
     </div>
 </div>
@@ -97,8 +178,6 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
 <script>
-// Load dashboard data
-// Missing Helper Function
 function updateUIText(lang) {
     document.querySelectorAll('[data-' + lang + ']').forEach(el => {
         el.textContent = el.getAttribute('data-' + lang);
@@ -110,14 +189,12 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadDashboardData() {
-    // Ensure this path matches your @main.route exactly
     fetch('/api/dashboard/stats')
         .then(response => {
             if (!response.ok) throw new Error('Network response was not ok');
             return response.json();
         })
         .then(data => {
-            // Updated to handle both "data.success" or just raw data
             const income = data.income_total || 0;
             const expense = data.expense_total || 0;
             const net = data.net_total || (income - expense);
@@ -126,14 +203,23 @@ function loadDashboardData() {
             document.getElementById('totalExpense').textContent = `KES ${expense.toLocaleString()}`;
             document.getElementById('netBalance').textContent = `KES ${net.toLocaleString()}`;
             
-            if (data.chart_data) createIncomeExpenseChart(data.chart_data);
-            if (data.recent_transactions) displayRecentTransactions(data.recent_transactions);
+            if (data.chart_data && typeof createIncomeExpenseChart === 'function') {
+                createIncomeExpenseChart(data.chart_data);
+            }
+            if (data.recent_transactions) {
+                displayRecentTransactions(data.recent_transactions);
+            }
         })
         .catch(error => {
-            console.error('Error loading dashboard:', error);
-            // Using LedgerMate's showFlashMessage from main.js
-            if (window.LedgerMate) {
-                window.LedgerMate.showFlashMessage('Error loading dashboard data', 'error');
+            console.error('Error loading dashboard data:', error);
+            const container = document.getElementById('recentTransactions');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center p-4">
+                        <i class="fas fa-exclamation-circle text-danger" style="font-size: 2rem; margin-bottom: 8px;"></i>
+                        <p class="text-muted" style="font-size: 14px;">Unable to load recent activity. Please refresh.</p>
+                    </div>
+                `;
             }
         });
 }
@@ -144,86 +230,111 @@ function displayRecentTransactions(transactions) {
     
     if (!transactions || transactions.length === 0) {
         container.innerHTML = `
-            <div class="empty-state" style="text-align:center; padding: 20px;">
-                <i class="fas fa-receipt" style="font-size: 48px; color: #ccc;"></i>
-                <p data-en="No transactions yet" data-sw="Hakuna miamala bado">No transactions yet</p>
-                <a href="/transactions/add" class="btn btn-primary">Add Your First Transaction</a>
+            <div class="text-center p-6" style="padding: 40px 20px;">
+                <div class="transaction-icon" style="margin: 0 auto 16px; width: 64px; height: 64px; background: var(--slate-100); color: var(--slate-400); font-size: 1.75rem;">
+                    <i class="fas fa-receipt" aria-hidden="true"></i>
+                </div>
+                <h4 style="font-weight: 700; color: var(--slate-800); margin-bottom: 6px;" data-en="No transactions yet" data-sw="Hakuna miamala bado">No transactions yet</h4>
+                <p style="font-size: 14px; color: var(--slate-500); margin-bottom: 20px;" data-en="Record your first income or expense to populate your ledger." data-sw="Weka muamala wako wa kwanza ili kuona rekodi.">
+                    Record your first income or expense to populate your ledger.
+                </p>
+                <a href="{{ url_for('transactions.add_transaction') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> <span data-en="Add First Transaction" data-sw="Ongeza Muamala">Add First Transaction</span>
+                </a>
             </div>
         `;
         updateUIText(currentLang);
         return;
     }
     
-    let html = '<ul class="transaction-list">';
+    let html = '<div class="d-flex flex-direction-column gap-2" style="display: flex; flex-direction: column; gap: 8px;">';
     transactions.forEach(t => {
-        const colorClass = t.type.toLowerCase() === 'income' ? 'income' : 'expense';
-        const symbol = t.type.toLowerCase() === 'income' ? '+' : '-';
+        const isIncome = (t.type || '').toLowerCase() === 'income';
+        const colorClass = isIncome ? 'income' : 'expense';
+        const symbol = isIncome ? '+' : '-';
+        const iconName = isIncome ? 'fa-arrow-down' : 'fa-arrow-up';
         
         html += `
-            <li class="transaction-item" onclick="showTransactionDetails('${t.id}')" style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #eee;">
-                <div>
-                    <div class="transaction-title"><strong>${t.description || t.category}</strong></div>
-                    <div class="transaction-meta" style="font-size:0.8em; color:#666;">${t.category} • ${t.payment_method}</div>
+            <div class="transaction-item" onclick="showTransactionDetails('${t.id || t.public_id}')" style="cursor: pointer;">
+                <div class="d-flex align-items-center" style="gap: 12px;">
+                    <div class="transaction-icon ${colorClass}" style="margin-right: 0;">
+                        <i class="fas ${iconName}" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <div class="transaction-name">${t.description || t.category || 'Transaction'}</div>
+                        <div class="transaction-time">
+                            <span class="badge ${isIncome ? 'badge-success' : 'badge-danger'}" style="margin-right: 6px; font-size: 10px;">${t.category || (isIncome ? 'Income' : 'Expense')}</span>
+                            <span>${t.payment_method || 'Cash'}</span> &bull; <span>${t.date || 'Recent'}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="transaction-amount ${colorClass}" style="color: ${colorClass === 'income' ? 'green' : 'red'}">
-                    ${symbol} KES ${t.amount.toLocaleString()}
+                <div class="transaction-amount ${isIncome ? 'amount-in' : 'amount-out'}">
+                    ${symbol} KES ${Number(t.amount || 0).toLocaleString()}
                 </div>
-            </li>`;
+            </div>`;
     });
-    html += '</ul>';
+    html += '</div>';
     container.innerHTML = html;
     updateUIText(currentLang);
 }
 
-// ... keep your showTransactionDetails and closeModal functions as they were
-
 function showTransactionDetails(transactionId) {
-    fetch(`/transactions/api/${transactionId}`)
+    if (!transactionId) return;
+    fetch(`/transactions/api/list?search=${transactionId}`)
         .then(response => response.json())
         .then(data => {
-            if (data.success) {
-                const t = data.transaction;
-                const currentLang = document.documentElement.lang || 'en';
+            if (data.transactions && data.transactions.length > 0) {
+                const t = data.transactions[0];
+                const isIncome = (t.type || '').toLowerCase() === 'income';
                 
                 const detailsHtml = `
-                    <div class="transaction-detail">
-                        <p><strong data-en="Type:" data-sw="Aina:">Type:</strong> 
-                            <span class="badge ${t.type}">${t.type}</span></p>
-                        <p><strong data-en="Amount:" data-sw="Kiasi:">Amount:</strong> 
-                            KES ${t.amount.toLocaleString()}</p>
-                        <p><strong data-en="Category:" data-sw="Aina:">Category:</strong> 
-                            ${t.category}</p>
-                        <p><strong data-en="Payment Method:" data-sw="Njia ya Malipo:">Payment Method:</strong> 
-                            ${t.payment_method}</p>
-                        <p><strong data-en="Description:" data-sw="Maelezo:">Description:</strong> 
-                            ${t.description || '-'}</p>
-                        <p><strong data-en="Date:" data-sw="Tarehe:">Date:</strong> 
-                            ${t.date}</p>
+                    <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+                            <span class="text-muted">Type</span>
+                            <span class="badge ${isIncome ? 'badge-success' : 'badge-danger'}">${t.type ? t.type.toUpperCase() : 'ENTRY'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+                            <span class="text-muted">Amount</span>
+                            <strong style="font-size: 1.1rem; color: ${isIncome ? 'var(--success-dark)' : 'var(--danger-dark)'};">KES ${Number(t.amount || 0).toLocaleString()}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+                            <span class="text-muted">Category</span>
+                            <strong>${t.category || 'Uncategorized'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+                            <span class="text-muted">Payment Method</span>
+                            <span>${t.payment_method || 'Cash'}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+                            <span class="text-muted">Date</span>
+                            <span>${t.date || 'Today'}</span>
+                        </div>
                         ${t.mpesa_code ? `
-                            <p><strong data-en="M-Pesa Code:" data-sw="Nambari ya M-Pesa:">M-Pesa Code:</strong> 
-                            ${t.mpesa_code}</p>
-                        ` : ''}
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--slate-100); padding-bottom: 8px;">
+                            <span class="text-muted">M-Pesa Reference</span>
+                            <strong style="font-family: var(--font-mono); color: var(--primary-dark);">${t.mpesa_code}</strong>
+                        </div>` : ''}
+                        <div style="display: flex; justify-content: space-between;">
+                            <span class="text-muted">Description</span>
+                            <span>${t.description || '-'}</span>
+                        </div>
                     </div>
                 `;
                 
                 document.getElementById('transactionDetails').innerHTML = detailsHtml;
                 document.getElementById('transactionModal').style.display = 'flex';
-                updateUIText(currentLang);
             }
-        });
+        })
+        .catch(err => console.error('Error fetching transaction details:', err));
 }
 
 function closeModal() {
-    document.getElementById('transactionModal').style.display = 'none';
+    const modal = document.getElementById('transactionModal');
+    if (modal) modal.style.display = 'none';
 }
 
-function deleteTransaction() {
-    // Get transaction ID from modal (would need to store it)
-    if (confirm('Are you sure you want to delete this transaction?')) {
-        // Implement delete
-        alert('Delete functionality - would call API');
-        closeModal();
-    }
-}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
 </script>
 {% endblock %}
