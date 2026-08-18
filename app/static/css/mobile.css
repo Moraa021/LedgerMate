@@ -1,110 +1,271 @@
-/* Mobile-specific styles */
-@media (max-width: 480px) {
-    :root {
-        --spacing: 12px;
-        --font-large: 16px;
-        --font-medium: 14px;
-        --font-small: 12px;
-    }
-    
-    .app-logo {
-        height: 42px;
-        max-width: 170px;
+/* ============================================================================
+   LedgerMate - Mobile & Tablet Responsive Styles
+   Touch-Optimized | Adaptive Layouts | High Performance
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+    .hero-container {
+        grid-template-columns: 1fr;
+        gap: var(--space-10);
+        text-align: center;
     }
 
-    /* Larger touch targets */
-    .btn, 
-    .nav-item,
-    .form-control,
-    .category-item,
-    .transaction-item {
-        min-height: 52px;
+    .hero-subheadline {
+        margin-left: auto;
+        margin-right: auto;
     }
-    
-    /* Stack cards on mobile */
-    .summary-cards {
-        grid-template-columns: 1fr;
-        gap: 10px;
+
+    .hero-cta-buttons {
+        justify-content: center;
     }
-    
-    .summary-card.net {
-        grid-column: span 1;
+
+    .trust-badges {
+        max-width: 600px;
+        margin: 0 auto;
     }
-    
-    /* Adjust bottom nav for small screens */
-    .nav-item span {
-        font-size: 10px;
+
+    .features-grid,
+    .pricing-grid,
+    .security-grid,
+    .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-5);
     }
-    
-    .nav-item i {
-        font-size: 18px;
+
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-8);
     }
-    
-    /* Full-width modals on mobile */
-    .modal-content {
-        max-height: 90vh;
-        margin: 10px;
+}
+
+@media (max-width: 768px) {
+    /* Safe viewport padding */
+    .container,
+    .app-container,
+    .dashboard,
+    .transactions-page,
+    .inventory-page,
+    .categories-page,
+    .reports-page,
+    .profile-page,
+    .form-page,
+    .section-container {
+        padding-left: var(--space-4);
+        padding-right: var(--space-4);
+        padding-top: var(--space-4);
     }
-    
-    /* Thumb-friendly filters */
-    .filter-row {
+
+    /* Padding for fixed bottom nav on mobile */
+    .app-main-content {
+        padding-bottom: 88px;
+    }
+
+    /* Typography adjustments on mobile */
+    .hero-headline {
+        font-size: 2.25rem !important;
+    }
+
+    .hero-subheadline {
+        font-size: 1.05rem !important;
+    }
+
+    .section-title {
+        font-size: 1.85rem !important;
+    }
+
+    /* Header & Navigation on Mobile */
+    .nav-links {
+        display: none;
+        position: fixed;
+        top: 72px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         flex-direction: column;
-        gap: 10px;
+        align-items: stretch;
+        padding: var(--space-6) var(--space-5);
+        gap: var(--space-3);
+        z-index: 1000;
+        overflow-y: auto;
+        animation: fadeIn 0.25s ease-out;
     }
-    
-    .filter-row .btn {
+
+    .nav-links.show {
+        display: flex;
+    }
+
+    .nav-link {
+        font-size: 1.1rem;
+        padding: 14px 16px;
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--slate-100);
+        background: var(--slate-50);
+    }
+
+    .nav-actions {
+        display: none;
+    }
+
+    .mobile-menu-toggle {
+        display: flex;
+    }
+
+    /* Hamburger animation when active */
+    .mobile-menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(1) {
+        transform: translateY(6px) rotate(45deg);
+    }
+
+    .mobile-menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(2) {
+        opacity: 0;
+    }
+
+    .mobile-menu-toggle[aria-expanded="true"] .hamburger-line:nth-child(3) {
+        transform: translateY(-6px) rotate(-45deg);
+    }
+
+    /* Hero CTA & Trust Badges */
+    .hero-cta-buttons {
+        flex-direction: column;
         width: 100%;
     }
-    
-    /* Larger checkboxes and radio buttons */
-    input[type="checkbox"],
-    input[type="radio"] {
-        width: 20px;
-        height: 20px;
-        margin-right: 10px;
-    }
-    
-    /* Easy-to-tap list items */
-    .transaction-item {
-        padding: 15px 12px;
-    }
-    
-    /* Bottom padding for fixed elements */
-    body {
-        padding-bottom: 70px;
-    }
-    
-    /* Floating action button adjustments */
-    .nav-item.add-btn {
-        width: 56px;
-        height: 56px;
-    }
-}
 
-/* Landscape orientation adjustments */
-@media (orientation: landscape) and (max-height: 480px) {
-    .bottom-nav {
-        padding: 4px 0;
+    .hero-cta-buttons .btn {
+        width: 100%;
     }
-    
+
+    .trust-badges {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+        text-align: left;
+    }
+
+    /* Grids to single column */
+    .features-grid,
+    .pricing-grid,
+    .security-grid,
+    .steps-grid,
+    .summary-cards,
+    .two-col,
+    .row.g-3 {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-4) !important;
+    }
+
+    .summary-card.net {
+        grid-column: span 1 !important;
+    }
+
+    .footer-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-6);
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        gap: var(--space-3);
+        text-align: center;
+    }
+
+    /* Filter Row on Mobile */
+    .filter-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .filter-row .btn,
+    .filter-row .search-box {
+        grid-column: span 2;
+        width: 100%;
+    }
+
+    /* Touch Targets */
+    .btn,
+    .form-control,
+    .form-select,
+    .page-btn {
+        min-height: 48px;
+    }
+
+    /* Modals on Mobile */
     .modal-content {
-        max-height: 80vh;
+        margin: 12px;
+        width: calc(100% - 24px);
+        max-height: 85vh;
+        padding: var(--space-5);
+    }
+
+    /* Bottom Navigation Display */
+    .bottom-nav {
+        display: flex;
+        padding-bottom: env(safe-area-inset-bottom, 4px);
+        height: calc(64px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Horizontal scrollable tables and tabs */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .report-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+    }
+
+    .report-tab {
+        flex-shrink: 0;
+    }
+
+    /* CTA Final Banner */
+    .cta-final-section {
+        margin: 0 var(--space-3) var(--space-10);
+        padding: var(--space-12) var(--space-4);
+        border-radius: var(--radius-2xl);
+    }
+
+    .cta-headline {
+        font-size: 1.85rem;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+    }
+
+    .cta-buttons .btn {
+        width: 100%;
     }
 }
 
-/* High contrast mode for better visibility */
-@media (prefers-contrast: high) {
-    :root {
-        --primary-color: #006600;
-        --danger-color: #cc0000;
+@media (max-width: 480px) {
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-row .btn,
+    .filter-row .search-box,
+    .filter-row select,
+    .filter-row input {
+        grid-column: span 1;
+        width: 100%;
+    }
+
+    .brand-text {
+        font-size: 1.2rem;
     }
 }
 
-/* Reduce motion if user prefers */
+/* Accessibility & Preferences */
 @media (prefers-reduced-motion: reduce) {
-    * {
-        animation-duration: 0.01ms !important;
+    *, *::before, *::after {
+        animation-duration: 0.001s !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        transition-duration: 0.001s !important;
+        scroll-behavior: auto !important;
     }
 }
